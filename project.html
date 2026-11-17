@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Project — Expo 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<nav class="nav"><div class="container" id="nav"></div></nav>
+
+<div class="container" id="content" style="padding:60px 24px"></div>
+
+<footer class="footer" id="footer"></footer>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="js/store.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+  ExpoUI.renderNav(document.getElementById('nav'));
+  ExpoUI.renderFooter(document.getElementById('footer'));
+  const S = window.ExpoStore;
+  S.ready().then(() => {
+  const id = new URLSearchParams(location.search).get('id');
+  const p = S.getProjectById(id);
+  const c = document.getElementById('content');
+  if (!p) {
+    c.innerHTML = '<div class="empty"><p>Project not found.</p><a class="btn btn-ghost" href="projects.html" style="margin-top:16px">Back to projects</a></div>';
+  } else {
+    c.innerHTML = `
+      <div class="detail-hero">
+        <a href="projects.html" style="color:var(--muted);font-size:14px;display:inline-block;margin-bottom:24px">Back to projects</a>
+        <div class="detail-grid">
+          <div>
+            <div class="detail-thumb">
+              ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.title}">` : '<div class=img-fallback>No image</div>'}
+            </div>
+            <div style="margin-top:24px">
+              <div class="kicker">${p.category}</div>
+              <h1 class="detail-title">${p.title}</h1>
+              <div class="project-tags" style="margin:14px 0">${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+              <p class="detail-body">${p.description}</p>
+            </div>
+          </div>
+          <div class="detail-info glass" style="padding:28px;height:fit-content">
+            <div>
+              <div style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Submitted by</div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <span class="avatar" style="width:40px;height:40px;font-size:15px">${S.initials(p.studentName)}</span>
+                <div>
+                  <div style="font-weight:700">${p.studentName}</div>
+                  <div style="color:var(--muted);font-size:13px">${p.grade}</div>
+                </div>
+              </div>
+            </div>
+            <div class="detail-meta-row">
+              <div><div style="color:var(--muted);font-size:12px">Status</div><span class="status-pill ${p.status}">${p.status}</span></div>
+              <div><div style="color:var(--muted);font-size:12px">Submitted</div><strong>${new Date(p.createdAt).toLocaleDateString()}</strong></div>
+              ${p.reviewedAt ? `<div><div style="color:var(--muted);font-size:12px">Reviewed</div><strong>${new Date(p.reviewedAt).toLocaleDateString()}</strong></div>` : ''}
+            </div>
+            ${p.reviewNote ? `<div><div style="color:var(--muted);font-size:12px;margin-bottom:4px">Review note</div><div class="detail-note">${p.reviewNote}</div></div>` : ''}
+            <div class="detail-actions">
+              ${p.demoUrl && p.demoUrl !== '#' ? `<a class="btn btn-primary" href="${p.demoUrl}" target="_blank">Live Demo</a>` : ''}
+              ${p.repoUrl && p.repoUrl !== '#' ? `<a class="btn btn-ghost" href="${p.repoUrl}" target="_blank">Repository</a>` : ''}
+            </div>
+            ${p.email ? `<div style="color:var(--muted);font-size:13px;border-top:1px solid var(--border);padding-top:16px">Contact: <span style="color:var(--text)">${p.email}</span></div>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }
+  });
+</script>
+</body>
+</html>

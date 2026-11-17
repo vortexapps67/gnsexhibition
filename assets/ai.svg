@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+<defs><radialGradient id="g" cx="50%" cy="40%"><stop stop-color="#2a1b5e"/><stop offset="1" stop-color="#0a0717"/></radialGradient><linearGradient id="l" x1="0" x2="1"><stop stop-color="#a78bfa"/><stop offset="1" stop-color="#22d3ee"/></linearGradient><filter id="b"><feGaussianBlur stdDeviation="18"/></filter></defs>
+<rect width="800" height="500" fill="url(#g)"/>
+<circle cx="400" cy="230" r="140" fill="#7c5cff" opacity=".22" filter="url(#b)"/>
+<g stroke="url(#l)" stroke-width="1.5" opacity=".55" fill="none">
+<path d="M220 150 L360 230 L520 140 M220 150 L360 230 L500 340 M220 350 L360 230 L520 140 M220 350 L360 230 L500 340 M360 230 L620 240"/>
+</g>
+<g fill="url(#l)">
+<circle cx="220" cy="150" r="9"/><circle cx="220" cy="350" r="9"/><circle cx="360" cy="230" r="14"/><circle cx="520" cy="140" r="10"/><circle cx="500" cy="340" r="10"/><circle cx="620" cy="240" r="8"/>
+</g>
+<g fill="none" stroke="#fff" opacity=".12"><circle cx="360" cy="230" r="60"/><circle cx="360" cy="230" r="95"/><circle cx="360" cy="230" r="130"/></g>
+<text x="40" y="460" fill="#ffffff" opacity=".25" font-family="monospace" font-size="16" letter-spacing="4">NEURAL NETWORK / AI</text>
+</svg>

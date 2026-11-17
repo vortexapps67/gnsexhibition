@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Expo 2026 — School Exhibition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<nav class="nav"><div class="container" id="nav"></div></nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span> Annual School Exhibition · 2026</span>
+        <h1>Where student <span class="gradient-text">ideas</span> become real projects.</h1>
+        <p>Explore, vote and celebrate the most innovative work from our students — from robotics and AI to art, games and everything in between.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-lg" href="projects.html">Browse Projects</a>
+          <a class="btn btn-ghost btn-lg" href="submit.html">Submit Yours</a>
+        </div>
+        <div class="hero-stats" id="heroStats"></div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-photo"><img src="gns front.jpg" alt="School campus" /></div>
+        <div class="hero-card hero-card-1 glass floating" id="heroCard1" style="--r:-6deg; animation-delay:0s; display:none">
+          <div style="aspect-ratio:16/9;border-radius:12px;overflow:hidden;margin-bottom:10px;background:var(--surface-2)">
+            <img id="heroCard1Img" style="width:100%;height:100%;object-fit:cover" alt="">
+          </div>
+          <div id="heroCard1Title" style="font-weight:700;font-size:14px"></div>
+          <div id="heroCard1Meta" style="color:var(--muted);font-size:12px;margin-top:2px"></div>
+        </div>
+        <div class="hero-card hero-card-2 glass floating" id="heroCard2" style="--r:4deg; animation-delay:1.2s; display:none">
+          <div style="aspect-ratio:16/9;border-radius:12px;overflow:hidden;margin-bottom:10px;background:var(--surface-2)">
+            <img id="heroCard2Img" style="width:100%;height:100%;object-fit:cover" alt="">
+          </div>
+          <div id="heroCard2Title" style="font-weight:700;font-size:14px"></div>
+          <div id="heroCard2Meta" style="color:var(--muted);font-size:12px;margin-top:2px"></div>
+        </div>
+        <div class="hero-card hero-card-3 glass floating" style="--r:-2deg; animation-delay:2.4s">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="status-pill approved">Approved</span>
+            <span style="color:var(--muted);font-size:12px" id="heroLiveCount">Projects live</span>
+          </div>
+          <div style="margin-top:10px;font-weight:700">Next review in 2 days</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track" id="marqueeTrack"></div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <div>
+        <div class="kicker">Featured</div>
+        <h2>Spotlight projects</h2>
+        <p>Hand-picked by our review panel for outstanding creativity and impact.</p>
+      </div>
+      <a class="btn btn-ghost" href="projects.html">View all</a>
+    </div>
+    <div class="grid-projects" id="featuredGrid"></div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;border-top:none">
+  <div class="container">
+    <div class="section-head reveal">
+      <div>
+        <div class="kicker">The process</div>
+        <h2>From idea to exhibit</h2>
+        <p>Three clear steps take a student project from a first sketch to a live showcase.</p>
+      </div>
+    </div>
+    <div class="steps stagger">
+      <div class="step">
+        <div class="step-no">01</div>
+        <h3>Build & submit</h3>
+        <p>Students build their projects and submit details, images and links through the submission form.</p>
+      </div>
+      <div class="step">
+        <div class="step-no">02</div>
+        <h3>Review & refine</h3>
+        <p>The review panel checks every submission, gives feedback and approves work that meets the criteria.</p>
+      </div>
+      <div class="step">
+        <div class="step-no">03</div>
+        <h3>Showcase</h3>
+        <p>Approved projects appear in the public gallery where the whole school can explore and celebrate them.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="section-head reveal">
+      <div>
+        <div class="kicker">Categories</div>
+        <h2>Explore by domain</h2>
+      </div>
+    </div>
+    <div class="grid-projects" id="catGrid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))"></div>
+  </div>
+</section>
+
+<section class="scroll-lock" id="story">
+  <div class="container">
+    <div class="scroll-lock-sticky">
+      <div class="kicker">The journey</div>
+      <div class="lock-lines">
+        <div class="lock-line active" data-caption="Every great project begins with a question. Students imagine something that does not exist yet — then they set out to build it.">Imagine</div>
+        <div class="lock-line" data-caption="Ideas become prototypes, prototypes become working systems. Iteration, testing and persistence turn a concept into something real.">Build</div>
+        <div class="lock-line" data-caption="Approved work joins the exhibition gallery, where the whole school can explore it, learn from it and celebrate it.">Share</div>
+      </div>
+      <div class="lock-caption show">Every great project begins with a question. Students imagine something that does not exist yet — then they set out to build it.</div>
+      <div class="lock-progress"><span></span></div>
+      <div class="lock-count">01 / 03</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <div>
+        <div class="kicker">Latest</div>
+        <h2>Fresh submissions</h2>
+        <p>The newest work arriving in the exhibition, straight from the review queue.</p>
+      </div>
+      <a class="btn btn-ghost" href="projects.html">All projects</a>
+    </div>
+    <div class="grid-projects" id="latestGrid"></div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="quote-band reveal-scale">
+      <blockquote>Curiosity is the start. The exhibition is where it becomes something you can see, touch and remember.</blockquote>
+      <cite>The Expo 2026 Committee</cite>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="glass stagger" style="padding:44px;display:flex;align-items:center;justify-content:space-between;gap:30px;flex-wrap:wrap">
+      <div>
+        <div class="kicker" style="margin-bottom:10px">Mark your calendar</div>
+        <h2 style="font-size:clamp(30px,4vw,48px)">Exhibition day is December 12</h2>
+        <p style="color:var(--muted);margin-top:10px">A full day of demos, talks and awards across the campus.</p>
+      </div>
+      <a class="btn btn-primary btn-lg" href="schedule.html">See the schedule</a>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="glass" style="padding:48px;text-align:center">
+      <h2 style="font-size:clamp(24px,3vw,36px);margin:0 0 10px">Ready to showcase your work?</h2>
+      <p style="color:var(--muted);max-width:520px;margin:0 auto 24px">Submit your project for review. Approved projects go live on the exhibition gallery.</p>
+      <a class="btn btn-primary btn-lg" href="submit.html">Submit a Project</a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer" id="footer"></footer>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="js/store.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+  ExpoUI.renderNav(document.getElementById('nav'));
+  ExpoUI.renderFooter(document.getElementById('footer'));
+
+  const S = window.ExpoStore;
+
+  S.ready().then(() => {
+  renderHome(true);
+  S.subscribeProjects(() => renderHome(false));
+  });
+
+  function renderHome(initial) {
+  const projects = S.getProjects();
+  const approved = projects.filter(p => p.status === 'approved');
+  document.getElementById('heroLiveCount').textContent = `${approved.length} project${approved.length === 1 ? '' : 's'} live`;
+  [0, 1].forEach(i => {
+    const card = document.getElementById('heroCard' + (i + 1));
+    const p = approved[i];
+    if (!p) { card.style.display = 'none'; return; }
+    const img = document.getElementById('heroCard' + (i + 1) + 'Img');
+    img.src = p.imageUrl || '';
+    img.alt = p.title;
+    img.style.display = p.imageUrl ? '' : 'none';
+    document.getElementById('heroCard' + (i + 1) + 'Title').textContent = p.title;
+    document.getElementById('heroCard' + (i + 1) + 'Meta').textContent = `${p.studentName} · ${p.grade}`;
+    card.style.display = '';
+  });
+  const statNum = (n) => initial
+    ? `<span class="count-up" data-value="${n}">0</span>`
+    : `<span>${n}</span>`;
+  document.getElementById('heroStats').innerHTML = `
+    <div class="stat"><div class="num">${statNum(projects.length)}</div><div class="label">Total Projects</div></div>
+    <div class="stat"><div class="num">${statNum(approved.length)}</div><div class="label">Approved</div></div>
+    <div class="stat"><div class="num">${statNum(S.CATEGORIES.length)}</div><div class="label">Categories</div></div>`;
+
+  const featured = approved.filter(p => p.featured).slice(0,3);
+  const fallback = approved.slice(0,3);
+  const list = featured.length ? featured : fallback;
+  document.getElementById('featuredGrid').innerHTML = list.map(cardHTML).join('') || '<div class="empty"><p>No featured projects yet.</p></div>';
+
+  const catCounts = {};
+  S.CATEGORIES.forEach(c => catCounts[c] = projects.filter(p => p.category === c).length);
+  document.getElementById('catGrid').innerHTML = S.CATEGORIES.map(c => `
+    <a href="projects.html?cat=${encodeURIComponent(c)}" class="glass" style="padding:20px;display:block;transition:transform .2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+      <div class="category-icon">${catIcon(c)}</div>
+      <div style="font-weight:700;font-size:15px">${c}</div>
+      <div style="color:var(--muted);font-size:13px;margin-top:4px">${catCounts[c]} projects</div>
+    </a>`).join('');
+
+  const marqueeItems = [...S.CATEGORIES, ...S.CATEGORIES].map(c => `<span class="marquee-item">${c}</span>`).join('');
+  document.getElementById('marqueeTrack').innerHTML = marqueeItems;
+  document.getElementById('latestGrid').innerHTML = projects.slice(0,3).map(cardHTML).join('') || '<div class="empty"><p>No submissions yet.</p></div>';
+  setTimeout(() => ExpoUI.revealOnScroll(), initial ? 100 : 40);
+  }
+
+  function catIcon(c) {
+    const paths = {
+      'Robotics': '<rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V5"/><circle cx="12" cy="4" r="1"/><circle cx="9" cy="13" r="1"/><circle cx="15" cy="13" r="1"/>',
+      'AI & Machine Learning': '<circle cx="12" cy="12" r="3"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/>',
+      'Web Development': '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+      'Mobile Apps': '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+      'IoT & Hardware': '<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>',
+      'Science & Research': '<path d="M9 2h6M10 2v7l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V2"/><path d="M7 15h10"/>',
+      'Art & Design': '<path d="M12 3a9 9 0 1 0 0 18h1.5a2 2 0 0 0 1.4-3.4 2 2 0 0 1 1.4-3.4H18a3 3 0 0 0 3-3A9 9 0 0 0 12 3Z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/>',
+      'Game Development': '<path d="M7 8h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5.2 2l-1-1H9.2l-1 1A3 3 0 0 1 3 13v-1a4 4 0 0 1 4-4Z"/><path d="M7 11v3M5.5 12.5h3"/><circle cx="15.5" cy="11.5" r=".8"/><circle cx="17.5" cy="13.5" r=".8"/>',
+      'Other': '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/>'
+    };
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${paths[c] || paths.Other}</svg>`;
+  }
+  function cardHTML(p) {
+    return `
+      <a href="project.html?id=${p.id}" class="project-card reveal">
+        <div class="project-thumb">
+          ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=img-fallback>No image</div>'">` : '<div class=img-fallback>No image</div>'}
+          <span class="badge status-${p.status}">${p.status}</span>
+        </div>
+        <div class="project-body">
+          <div class="project-cat">${p.category}</div>
+          <div class="project-title">${p.title}</div>
+          <div class="project-desc">${p.description}</div>
+          <div class="project-meta">
+            <div class="project-author"><span class="avatar">${S.initials(p.studentName)}</span>${p.studentName}</div>
+            <div style="color:var(--muted);font-size:12px">${p.grade}</div>
+          </div>
+        </div>
+      </a>`;
+  }
+</script>
+</body>
+</html>

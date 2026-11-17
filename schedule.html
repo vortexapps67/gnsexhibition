@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Schedule — Expo 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<nav class="nav"><div class="container" id="nav"></div></nav>
+
+<section class="page-intro">
+  <div class="container">
+    <div class="kicker">Timeline</div>
+    <h1>The road to expo</h1>
+    <p>Key dates from the first submission to the awards ceremony. Plan your involvement and don't miss a milestone.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:20px">
+  <div class="container">
+    <div class="timeline stagger">
+      <div class="timeline-item">
+        <div class="timeline-date">Nov 12<span>Opening</span></div>
+        <div class="timeline-body">
+          <h3>Submissions open</h3>
+          <p>The submission form goes live. Students can create their entry, upload an image and add links to a demo or repository.</p>
+        </div>
+        <div class="timeline-tag">All students</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Nov 30<span>Deadline</span></div>
+        <div class="timeline-body">
+          <h3>Submission deadline</h3>
+          <p>All project details must be submitted by 11:59 PM. Entries received after this point are not included in the first review round.</p>
+        </div>
+        <div class="timeline-tag">11:59 PM</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Dec 01–05<span>Review</span></div>
+        <div class="timeline-body">
+          <h3>Panel review</h3>
+          <p>The review panel checks every submission against the criteria, leaves notes and approves or rejects each project.</p>
+        </div>
+        <div class="timeline-tag">Admin panel</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Dec 08<span>Feedback</span></div>
+        <div class="timeline-body">
+          <h3>Revision window</h3>
+          <p>Students whose projects need changes receive reviewer feedback and can update their submissions before final approval.</p>
+        </div>
+        <div class="timeline-tag">Optional</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Dec 12<span>Exhibition</span></div>
+        <div class="timeline-body">
+          <h3>Exhibition day</h3>
+          <p>Doors open at 9 AM. Explore the gallery, watch live demonstrations, meet the student creators and vote for your favourites.</p>
+        </div>
+        <div class="timeline-tag">Main campus</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Dec 12<span>Awards</span></div>
+        <div class="timeline-body">
+          <h3>Awards ceremony</h3>
+          <p>The closing ceremony announces Best Innovation, Best Design, Best Social Impact and the People's Choice award.</p>
+        </div>
+        <div class="timeline-tag">5:00 PM</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="glass stagger" style="padding:48px;text-align:center">
+      <div class="kicker" style="justify-content:center">Ready?</div>
+      <h2 style="font-size:clamp(30px,4vw,48px)">Have a project to show?</h2>
+      <p style="color:var(--muted);max-width:500px;margin:12px auto 24px">Submit before the deadline and we'll take care of the rest.</p>
+      <a class="btn btn-primary btn-lg" href="submit.html">Submit a Project</a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer" id="footer"></footer>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="js/store.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+  ExpoUI.renderNav(document.getElementById('nav'));
+  ExpoUI.renderFooter(document.getElementById('footer'));
+</script>
+</body>
+</html>

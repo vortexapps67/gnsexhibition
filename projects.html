@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Projects — Expo 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<nav class="nav"><div class="container" id="nav"></div></nav>
+
+<section style="padding:60px 0 20px">
+  <div class="container">
+    <div class="kicker">Gallery</div>
+    <h1 style="font-size:clamp(32px,4vw,52px);margin:0 0 8px;letter-spacing:-0.02em;font-weight:800">All Projects</h1>
+    <p style="color:var(--muted);max-width:600px;margin:0">Browse every submission. Filter by category or status, search by title or student.</p>
+  </div>
+</section>
+
+<section style="padding:20px 0 40px">
+  <div class="container">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px">
+      <div class="filters" id="filters"></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div class="search-box"><span style="color:var(--muted-2)">⌕</span><input id="search" placeholder="Search projects..." /></div>
+        <select id="sort" class="sort-select" aria-label="Sort projects">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="az">Title A to Z</option>
+          <option value="za">Title Z to A</option>
+        </select>
+      </div>
+    </div>
+    <div id="statusFilter" style="display:flex;gap:8px;margin-bottom:18px"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+      <div id="resultCount" style="color:var(--muted);font-size:12px"></div>
+      <span id="syncBadge" class="sync-badge"></span>
+    </div>
+    <div class="grid-projects" id="grid"></div>
+    <div id="empty" class="empty" style="display:none"><p>No projects match your filters.</p></div>
+    <div class="load-more" id="loadMoreWrap" style="display:none"><button class="btn btn-ghost" id="loadMore">Load more</button></div>
+  </div>
+</section>
+
+<footer class="footer" id="footer"></footer>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="js/store.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+  ExpoUI.renderNav(document.getElementById('nav'));
+  ExpoUI.renderFooter(document.getElementById('footer'));
+  const S = window.ExpoStore;
+  const params = new URLSearchParams(location.search);
+  let activeCat = params.get('cat') || 'All';
+  let activeStatus = params.get('status') || 'All';
+  let query = '';
+  let sortBy = 'newest';
+  const PAGE_SIZE = 6;
+  let visibleCount = PAGE_SIZE;
+
+  S.ready().then(() => {
+  const badge = document.getElementById('syncBadge');
+  badge.textContent = S.backend === 'firebase' ? 'Live sync' : 'Local';
+  badge.classList.add(S.backend === 'firebase' ? 'live' : 'local');
+  badge.title = S.backend === 'firebase' ? 'Updates live from Firebase Realtime Database' : 'Firebase unavailable — using local storage';
+
+  const cats = ['All', ...S.CATEGORIES];
+  document.getElementById('filters').innerHTML = cats.map(c => `<button class="filter-chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`).join('');
+  document.getElementById('statusFilter').innerHTML = ['All','Approved','Pending','Rejected'].map(s => `<button class="filter-chip ${s===activeStatus?'active':''}" data-status="${s}">${s}</button>`).join('');
+
+  document.getElementById('filters').addEventListener('click', e => {
+    const b = e.target.closest('[data-cat]'); if(!b) return;
+    activeCat = b.dataset.cat;
+    document.querySelectorAll('#filters .filter-chip').forEach(x => x.classList.toggle('active', x.dataset.cat===activeCat));
+    refresh();
+  });
+  document.getElementById('statusFilter').addEventListener('click', e => {
+    const b = e.target.closest('[data-status]'); if(!b) return;
+    activeStatus = b.dataset.status;
+    document.querySelectorAll('#statusFilter .filter-chip').forEach(x => x.classList.toggle('active', x.dataset.status===activeStatus));
+    refresh();
+  });
+  document.getElementById('search').addEventListener('input', e => { query = e.target.value.toLowerCase(); refresh(); });
+  document.getElementById('sort').addEventListener('change', e => { sortBy = e.target.value; refresh(); });
+  document.getElementById('loadMore').addEventListener('click', () => { visibleCount += PAGE_SIZE; render(); });
+
+  function refresh() { visibleCount = PAGE_SIZE; render(); }
+
+  function getFiltered() {
+    let list = S.getProjects();
+    if (activeCat !== 'All') list = list.filter(p => p.category === activeCat);
+    if (activeStatus !== 'All') list = list.filter(p => p.status === activeStatus.toLowerCase());
+    if (query) list = list.filter(p => (p.title+p.description+p.studentName+p.tags.join(' ')).toLowerCase().includes(query));
+    if (sortBy === 'newest') list.sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
+    else if (sortBy === 'oldest') list.sort((a,b) => (a.createdAt||0)-(b.createdAt||0));
+    else if (sortBy === 'az') list.sort((a,b) => a.title.localeCompare(b.title));
+    else if (sortBy === 'za') list.sort((a,b) => b.title.localeCompare(a.title));
+    return list;
+  }
+
+  function render() {
+    const list = getFiltered();
+    const grid = document.getElementById('grid');
+    const empty = document.getElementById('empty');
+    const count = document.getElementById('resultCount');
+    const loadWrap = document.getElementById('loadMoreWrap');
+    const shown = list.slice(0, visibleCount);
+    count.textContent = list.length ? `Showing ${shown.length} of ${list.length} project${list.length === 1 ? '' : 's'}` : '';
+    if (!list.length) { grid.innerHTML = ''; empty.style.display = 'block'; loadWrap.style.display = 'none'; return; }
+    empty.style.display = 'none';
+    grid.innerHTML = shown.map(cardHTML).join('');
+    loadWrap.style.display = shown.length < list.length ? 'flex' : 'none';
+    setTimeout(() => ExpoUI.revealOnScroll(), 50);
+  }
+  function cardHTML(p) {
+    return `
+      <a href="project.html?id=${p.id}" class="project-card reveal">
+        <div class="project-thumb">
+          ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=img-fallback>No image</div>'">` : '<div class=img-fallback>No image</div>'}
+          <span class="badge status-${p.status}">${p.status}</span>
+        </div>
+        <div class="project-body">
+          <div class="project-cat">${p.category}</div>
+          <div class="project-title">${p.title}</div>
+          <div class="project-desc">${p.description}</div>
+          <div class="project-meta">
+            <div class="project-author"><span class="avatar">${S.initials(p.studentName)}</span>${p.studentName}</div>
+            <div style="color:var(--muted);font-size:12px">${p.grade}</div>
+          </div>
+        </div>
+      </a>`;
+  }
+  render();
+  // Firebase pushes a new snapshot -> repaint the gallery without a reload.
+  S.subscribeProjects(render);
+  });
+</script>
+</body>
+</html>

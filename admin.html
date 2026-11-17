@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Panel — Expo 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView" class="login-wrap" style="display:none">
+  <div class="glass login-card">
+    <div class="brand" style="margin-bottom:18px"><span class="brand-mark"><img src="school_logo.png" alt="School logo" /></span><span>Expo<span style="color:var(--accent-2)">Admin</span></span></div>
+    <h1>Admin sign in</h1>
+    <p>Manage exhibition projects, reviews and approvals.</p>
+    <form id="loginForm">
+      <div class="field" style="margin-bottom:14px"><label>Username</label><input name="user" required placeholder="admin" /></div>
+      <div class="field" style="margin-bottom:18px"><label>Password</label><input name="pass" type="password" required placeholder="••••••••" /></div>
+      <button class="btn btn-primary" style="width:100%" type="submit">Sign in</button>
+      <div id="loginErr" style="color:var(--danger);font-size:13px;margin-top:12px;display:none">Invalid credentials.</div>
+      <div style="color:var(--muted-2);font-size:12px;margin-top:18px;text-align:center">Demo: admin / exhibition2026</div>
+    </form>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashView" style="display:none">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="admin-brand"><span class="brand-mark"><img src="school_logo.png" alt="School logo" /></span><span style="font-weight:700">Expo Admin</span></div>
+      <nav class="admin-nav">
+        <a href="#" class="active" data-view="overview">Overview</a>
+        <a href="#" data-view="projects">Projects</a>
+        <a href="#" data-view="pending">Pending Review</a>
+        <a href="#" data-view="approved">Approved</a>
+        <a href="#" data-view="rejected">Rejected</a>
+        <a href="index.html">View Site</a>
+        <a href="#" id="logoutBtn">Logout</a>
+      </nav>
+    </aside>
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1 id="viewTitle">Overview</h1>
+          <div style="color:var(--muted);font-size:14px;margin-top:4px" id="viewSub">Exhibition control center</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="status-pill pending" id="backendBadge">Checking...</span>
+          <button class="btn btn-ghost btn-sm" id="exportBtn">Export JSON</button>
+          <button class="btn btn-danger btn-sm" id="resetBtn">Clear All Data</button>
+        </div>
+      </div>
+
+      <div id="overviewView">
+        <div class="admin-stats" id="statsGrid"></div>
+        <div class="glass" style="padding:24px;margin-bottom:24px">
+          <h3 style="margin:0 0 14px;font-size:16px">Quick actions</h3>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-warning btn-sm" data-goto="pending">Review pending</button>
+            <button class="btn btn-success btn-sm" data-goto="approved">View approved</button>
+            <button class="btn btn-ghost btn-sm" data-goto="projects">All projects</button>
+          </div>
+        </div>
+        <div class="glass" style="padding:24px">
+          <h3 style="margin:0 0 14px;font-size:16px">Recent submissions</h3>
+          <div class="table-wrap"><table><thead><tr><th>Project</th><th>Student</th><th>Category</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody id="recentBody"></tbody></table></div>
+        </div>
+        <div class="admin-columns" style="margin-top:24px">
+          <div class="glass" style="padding:24px">
+            <h3 style="margin:0 0 18px;font-size:16px">Projects by category</h3>
+            <div id="categoryAnalytics"></div>
+          </div>
+          <div class="glass" style="padding:24px">
+            <h3 style="margin:0 0 18px;font-size:16px">Recent activity</h3>
+            <div class="activity-list" id="activityList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="projectsView" style="display:none">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px">
+          <div class="search-box"><span style="color:var(--muted-2)">⌕</span><input id="adminSearch" placeholder="Search..." /></div>
+          <select id="adminCatFilter" style="padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit"></select>
+          <select id="adminStatusFilter" style="padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit">
+            <option value="All">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Project</th><th>Student</th><th>Category</th><th>Status</th><th>Featured</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="projectsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <h3 id="modalTitle">Edit Project</h3>
+    <form id="editForm">
+      <div class="form-grid">
+        <div class="field"><label>Title</label><input name="title" required /></div>
+        <div class="field"><label>Category</label><select name="category"></select></div>
+        <div class="field"><label>Student Name</label><input name="studentName" required /></div>
+        <div class="field"><label>Grade</label><input name="grade" required /></div>
+        <div class="field"><label>Email</label><input name="email" /></div>
+        <div class="field"><label>Image URL</label><input name="imageUrl" /></div>
+        <div class="field full"><label>Description</label><textarea name="description" required></textarea></div>
+        <div class="field"><label>Demo URL</label><input name="demoUrl" /></div>
+        <div class="field"><label>Repo URL</label><input name="repoUrl" /></div>
+        <div class="field full"><label>Tags (comma)</label><input name="tags" /></div>
+        <div class="field full"><label>Review Note</label><textarea name="reviewNote" style="min-height:70px"></textarea></div>
+        <div class="field full"><label>Status</label>
+          <select name="status">
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label class="checkbox-row"><input type="checkbox" name="featured" /> Featured on homepage</label>
+        </div>
+      </div>
+      <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" class="btn btn-ghost" id="modalCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast-wrap"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="js/store.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+  const S = window.ExpoStore;
+  const $ = (s) => document.querySelector(s);
+
+  // Auth gate
+  function showLogin() { $('#loginView').style.display='grid'; $('#dashView').style.display='none'; }
+  function showDash() { $('#loginView').style.display='none'; $('#dashView').style.display='block'; S.ready().then(initDash); }
+
+  if (S.isAdminLoggedIn()) showDash(); else showLogin();
+
+  $('#loginForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    if (S.adminLogin(fd.get('user'), fd.get('pass'))) {
+      showDash();
+    } else {
+      $('#loginErr').style.display = 'block';
+    }
+  });
+
+  let currentView = 'overview';
+  let editingId = null;
+  let adminFilter = { cat: 'All', status: 'All', q: '' };
+  let syncSubscribed = false;
+  const dashVisible = () => getComputedStyle($('#dashView')).display !== 'none';
+
+  function initDash() {
+    const badge = $('#backendBadge');
+    const live = S.backend === 'firebase';
+    badge.textContent = live ? 'Firebase connected' : 'Local fallback';
+    badge.className = 'status-pill ' + (live ? 'approved' : 'pending');
+    badge.title = live ? 'Syncing with Firebase Realtime Database' : 'Firebase unavailable — change the database rules to enable sync';
+
+    // populate category selects
+    const opts = '<option value="All">All categories</option>' + S.CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('');
+    $('#adminCatFilter').innerHTML = opts;
+    const editSel = document.querySelector('#editForm select[name=category]');
+    editSel.innerHTML = S.CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('');
+
+    // nav
+    document.querySelectorAll('.admin-nav a[data-view]').forEach(a => {
+      a.addEventListener('click', e => { e.preventDefault(); switchView(a.dataset.view); });
+    });
+    document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => switchView(b.dataset.goto)));
+    $('#logoutBtn').addEventListener('click', e => { e.preventDefault(); S.adminLogout(); location.reload(); });
+    $('#adminSearch').addEventListener('input', e => { adminFilter.q = e.target.value.toLowerCase(); renderProjectsTable(); });
+    $('#adminCatFilter').addEventListener('change', e => { adminFilter.cat = e.target.value; renderProjectsTable(); });
+    $('#adminStatusFilter').addEventListener('change', e => { adminFilter.status = e.target.value; renderProjectsTable(); });
+    $('#exportBtn').addEventListener('click', exportJSON);
+    $('#resetBtn').addEventListener('click', resetData);
+    $('#modalCancel').addEventListener('click', closeModal);
+    $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    $('#editForm').addEventListener('submit', saveEdit);
+
+    if (!syncSubscribed) {
+      syncSubscribed = true;
+      // Repaint the dashboard whenever Firebase pushes changes (from this tab
+      // or any other). Editing forms stay untouched — only tables/lists update.
+      S.subscribeProjects(() => { if (dashVisible()) refresh(); });
+      S.subscribeActivity(() => { if (dashVisible() && currentView === 'overview') renderActivity(); });
+    }
+
+    switchView('overview');
+  }
+
+  function switchView(v) {
+    currentView = v;
+    document.querySelectorAll('.admin-nav a[data-view]').forEach(a => a.classList.toggle('active', a.dataset.view === v));
+    const titles = { overview: ['Overview','Exhibition control center'], projects: ['All Projects','Manage every submission'], pending: ['Pending Review','Projects awaiting decision'], approved: ['Approved Projects','Live on the gallery'], rejected: ['Rejected Projects','Needs revision'] };
+    $('#viewTitle').textContent = titles[v][0];
+    $('#viewSub').textContent = titles[v][1];
+    $('#overviewView').style.display = v === 'overview' ? 'block' : 'none';
+    $('#projectsView').style.display = v === 'overview' ? 'none' : 'block';
+    if (v === 'overview') renderOverview();
+    else { adminFilter.status = v === 'pending' ? 'pending' : v === 'approved' ? 'approved' : v === 'rejected' ? 'rejected' : 'All'; $('#adminStatusFilter').value = adminFilter.status === 'All' ? 'All' : adminFilter.status; renderProjectsTable(); }
+  }
+
+  function renderOverview() {
+    const st = S.stats();
+    $('#statsGrid').innerHTML = `
+      <div class="stat-card"><div class="label">Total Projects</div><div class="value">${st.total}</div><div class="delta">All submissions</div></div>
+      <div class="stat-card"><div class="label">Approved</div><div class="value" style="color:var(--success)">${st.approved}</div><div class="delta">Live on gallery</div></div>
+      <div class="stat-card"><div class="label">Pending</div><div class="value" style="color:var(--warning)">${st.pending}</div><div class="delta">Awaiting review</div></div>
+      <div class="stat-card"><div class="label">Rejected</div><div class="value" style="color:var(--danger)">${st.rejected}</div><div class="delta">Needs revision</div></div>`;
+    const recent = S.getProjects().slice(0,6);
+    $('#recentBody').innerHTML = recent.map(rowHTML(false)).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No projects</td></tr>';
+    renderAnalytics();
+    renderActivity();
+  }
+
+  function renderAnalytics() {
+    const list = S.getProjects();
+    const counts = S.CATEGORIES.map(c => list.filter(p => p.category === c).length);
+    const max = Math.max(1, ...counts);
+    $('#categoryAnalytics').innerHTML = S.CATEGORIES.map((c, i) => `
+      <div class="cat-bar-row">
+        <div class="criterion-label"><strong>${c}</strong><span>${counts[i]}</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round((counts[i] / max) * 100)}%"></div></div>
+      </div>`).join('');
+  }
+
+  function renderActivity() {
+    const log = S.getActivity();
+    $('#activityList').innerHTML = log.length
+      ? log.slice(0, 8).map(a => `
+          <div class="activity-row">
+            <span class="activity-dot"></span>
+            <div><span class="activity-action">${a.action}</span> <span class="activity-detail">${a.detail || ''}</span></div>
+            <span class="activity-time">${timeAgo(a.at)}</span>
+          </div>`).join('')
+      : '<div style="color:var(--muted);font-size:13px">No activity yet. Approve, reject or edit a project to see it here.</div>';
+  }
+
+  function timeAgo(ts) {
+    const mins = Math.floor((Date.now() - (ts || Date.now())) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    return Math.floor(hrs / 24) + 'd ago';
+  }
+
+  function filteredProjects() {
+    let list = S.getProjects();
+    if (adminFilter.cat !== 'All') list = list.filter(p => p.category === adminFilter.cat);
+    if (adminFilter.status !== 'All') list = list.filter(p => p.status === adminFilter.status);
+    if (adminFilter.q) list = list.filter(p => (p.title+p.description+p.studentName+p.tags.join(' ')).toLowerCase().includes(adminFilter.q));
+    return list;
+  }
+
+  function renderProjectsTable() {
+    const list = filteredProjects();
+    const body = $('#projectsBody');
+    if (!list.length) { body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">No projects match.</td></tr>'; return; }
+    body.innerHTML = list.map(p => `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:44px;height:32px;border-radius:6px;overflow:hidden;background:var(--bg-soft);flex-shrink:0">
+              ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : ''}
+            </div>
+            <div>
+              <div style="font-weight:600">${p.title}</div>
+              <div style="color:var(--muted);font-size:12px">${p.tags.slice(0,3).join(', ')}</div>
+            </div>
+          </div>
+        </td>
+        <td>${p.studentName}<div style="color:var(--muted);font-size:12px">${p.grade}</div></td>
+        <td style="font-size:13px">${p.category}</td>
+        <td><span class="status-pill ${p.status}">${p.status}</span></td>
+        <td>${p.featured ? 'Yes' : '—'}</td>
+        <td style="font-size:13px;color:var(--muted)">${new Date(p.createdAt).toLocaleDateString()}</td>
+        <td>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" data-action="view" data-id="${p.id}">View</button>
+            <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${p.id}">Edit</button>
+            ${p.status !== 'approved' ? `<button class="btn btn-success btn-sm" data-action="approve" data-id="${p.id}">Approve</button>` : ''}
+            ${p.status !== 'rejected' ? `<button class="btn btn-warning btn-sm" data-action="reject" data-id="${p.id}">Reject</button>` : ''}
+            <button class="btn btn-danger btn-sm" data-action="delete" data-id="${p.id}">Delete</button>
+          </div>
+        </td>
+      </tr>`).join('');
+
+    body.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => handleAction(btn.dataset.action, btn.dataset.id));
+    });
+  }
+
+  function rowHTML(withActions) {
+    return (p) => `
+      <tr>
+        <td style="font-weight:600">${p.title}</td>
+        <td>${p.studentName}</td>
+        <td style="font-size:13px">${p.category}</td>
+        <td><span class="status-pill ${p.status}">${p.status}</span></td>
+        <td style="font-size:13px;color:var(--muted)">${new Date(p.createdAt).toLocaleDateString()}</td>
+        <td><button class="btn btn-ghost btn-sm" data-action="edit" data-id="${p.id}">Edit</button></td>
+      </tr>`;
+  }
+
+  function handleAction(action, id) {
+    const p = S.getProjectById(id);
+    if (!p) return;
+    if (action === 'view') { window.open('project.html?id=' + id, '_blank'); return; }
+    if (action === 'edit') { openEdit(id); return; }
+    if (action === 'approve') {
+      S.updateProject(id, { status: 'approved', reviewedAt: Date.now(), reviewNote: p.reviewNote || 'Approved.' });
+      S.logActivity('Approved', p.title);
+      ExpoUI.toast('Project approved', 'success');
+      refresh();
+    }
+    if (action === 'reject') {
+      const note = prompt('Rejection reason (optional):', p.reviewNote || '');
+      if (note === null) return;
+      S.updateProject(id, { status: 'rejected', reviewedAt: Date.now(), reviewNote: note });
+      S.logActivity('Rejected', p.title);
+      ExpoUI.toast('Project rejected', 'success');
+      refresh();
+    }
+    if (action === 'delete') {
+      if (!confirm('Delete "' + p.title + '"? This cannot be undone.')) return;
+      S.deleteProject(id);
+      S.logActivity('Deleted', p.title);
+      ExpoUI.toast('Project deleted', 'success');
+      refresh();
+    }
+  }
+
+  function openEdit(id) {
+    editingId = id;
+    const p = S.getProjectById(id);
+    const f = $('#editForm');
+    f.title.value = p.title || '';
+    f.category.value = p.category || S.CATEGORIES[0];
+    f.studentName.value = p.studentName || '';
+    f.grade.value = p.grade || '';
+    f.email.value = p.email || '';
+    f.imageUrl.value = p.imageUrl || '';
+    f.description.value = p.description || '';
+    f.demoUrl.value = p.demoUrl || '';
+    f.repoUrl.value = p.repoUrl || '';
+    f.tags.value = (p.tags || []).join(', ');
+    f.reviewNote.value = p.reviewNote || '';
+    f.status.value = p.status || 'pending';
+    f.featured.checked = !!p.featured;
+    $('#modalTitle').textContent = 'Edit: ' + p.title;
+    $('#modal').classList.add('open');
+  }
+
+  function closeModal() { $('#modal').classList.remove('open'); editingId = null; }
+
+  function saveEdit(e) {
+    e.preventDefault();
+    const f = $('#editForm');
+    const fd = new FormData(f);
+    const data = Object.fromEntries(fd.entries());
+    data.tags = (data.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+    data.featured = f.featured.checked;
+    if (!data.demoUrl) data.demoUrl = '#';
+    if (!data.repoUrl) data.repoUrl = '#';
+    data.reviewedAt = Date.now();
+    S.updateProject(editingId, data);
+    S.logActivity('Edited', data.title);
+    ExpoUI.toast('Changes saved', 'success');
+    closeModal();
+    refresh();
+  }
+
+  function refresh() {
+    if (currentView === 'overview') renderOverview();
+    else renderProjectsTable();
+  }
+
+  function exportJSON() {
+    const blob = new Blob([JSON.stringify(S.getProjects(), null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'expo-projects.json'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function resetData() {
+    if (!confirm('Delete all projects? This cannot be undone.')) return;
+    S.clearProjects();
+    S.logActivity('Cleared all projects', 'All submissions removed');
+    ExpoUI.toast('All projects cleared', 'success');
+    refresh();
+  }
+</script>
+</body>
+</html>

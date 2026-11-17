@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Review Panel — Expo 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<nav class="nav"><div class="container" id="nav"></div></nav>
+
+<section class="page-intro">
+  <div class="container">
+    <div class="kicker">Review panel</div>
+    <h1>The people behind the decisions</h1>
+    <p>Every submission is reviewed by a mixed panel of faculty and student leads. Their feedback helps projects improve before the exhibition.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:20px">
+  <div class="container">
+    <div class="people stagger" id="peopleGrid"></div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="section-head reveal">
+      <div>
+        <div class="kicker">Criteria</div>
+        <h2>How projects are judged</h2>
+        <p>Transparent weighting keeps the review process fair and consistent across every category.</p>
+      </div>
+    </div>
+    <div class="glass" style="padding:40px">
+      <div class="criteria" id="criteriaList"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="quote-band reveal-scale">
+      <blockquote>Good feedback is part of the exhibition, not a step before it.</blockquote>
+      <cite>Expo 2026 Review Panel</cite>
+    </div>
+  </div>
+</section>
+
+<footer class="footer" id="footer"></footer>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="js/store.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+  ExpoUI.renderNav(document.getElementById('nav'));
+  ExpoUI.renderFooter(document.getElementById('footer'));
+  const S = window.ExpoStore;
+
+  const people = [
+    ['Dr. Anil Rao', 'Faculty Advisor', 'Leads the review panel and oversees final approvals across all categories.'],
+    ['Ms. Priya Nair', 'Exhibition Coordinator', 'Coordinates submissions, scheduling and the exhibition day programme.'],
+    ['Rahul Kapoor', 'Student Lead', 'Represents the student voice and reviews usability and creativity.'],
+    ['Sneha Tiwari', 'Design Lead', 'Focuses on visual craft, presentation quality and interaction design.'],
+    ['Mr. Daniel Fernandes', 'Technology Mentor', 'Reviews technical depth, code quality and feasibility of built systems.']
+  ];
+  document.getElementById('peopleGrid').innerHTML = people.map(p => `
+    <div class="person reveal">
+      <div class="person-top">
+        <div class="person-avatar">${S.initials(p[0])}</div>
+        <div>
+          <div class="person-name">${p[0]}</div>
+          <div class="person-role">${p[1]}</div>
+        </div>
+      </div>
+      <p>${p[2]}</p>
+    </div>`).join('');
+
+  const criteria = [
+    ['Innovation & originality', 25],
+    ['Technical execution', 25],
+    ['Design & presentation', 20],
+    ['Real-world impact', 20],
+    ['Clarity of submission', 10]
+  ];
+  document.getElementById('criteriaList').innerHTML = criteria.map(c => `
+    <div class="cat-bar-row">
+      <div class="criterion-label"><strong>${c[0]}</strong><span>${c[1]}%</span></div>
+      <div class="bar-track"><div class="bar-fill" data-width="${c[1]}%" style="width:0"></div></div>
+    </div>`).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.bar-fill').forEach((b, i) => {
+      setTimeout(() => { b.style.width = b.dataset.width; }, 120 * i);
+    });
+  }, 400);
+</script>
+</body>
+</html>
