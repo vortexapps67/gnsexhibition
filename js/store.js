@@ -1,161 +1,96 @@
 // Data layer for the exhibition site.
-// Primary store: Firebase Realtime Database. Fallback: localStorage.
-// All reads are synchronous against an in-memory cache; call ExpoStore.ready()
-// once before the first render so the cache has been hydrated.
+// Architecture: Pure serverless backend API (/api) with secure environment variables.
+// ZERO credentials, secrets, or database URLs are exposed in client-side code.
+// Reads are synchronous against an in-memory cache hydrated on startup.
 
 const STORE_KEY = 'expo_projects_v2';
 const ACTIVITY_KEY = 'expo_activity_v2';
-const ADMIN_KEY = 'expo_admin_session_v1';
-const ADMIN_CREDS = { user: 'admin', pass: 'exhibition2026' };
-const DB_ROOT = 'expo2026';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCRsbEJd4jNRYCeGsKDtaaO5HlWkEOkNIg",
-  authDomain: "du-spoofer.firebaseapp.com",
-  databaseURL: "https://du-spoofer-default-rtdb.firebaseio.com",
-  projectId: "du-spoofer",
-  storageBucket: "du-spoofer.firebasestorage.app",
-  messagingSenderId: "732214647457",
-  appId: "1:732214647457:web:9e91a8b48cfdac17c16ee0",
-  measurementId: "G-V10EFESX44"
-};
+const ADMIN_TOKEN_KEY = 'expo_admin_token';
+const ADMIN_USER_KEY = 'expo_admin_user';
 
 const CATEGORIES = [
   'Robotics', 'AI & Machine Learning', 'Web Development', 'Mobile Apps',
   'IoT & Hardware', 'Science & Research', 'Art & Design', 'Game Development', 'Other'
 ];
 
-let db = null;
-let useFirebase = false;
 let projectsCache = null;
 let activityCache = null;
+let isApiConnected = false;
 let settled = false;
 let resolveReady;
 const readyPromise = new Promise(resolve => { resolveReady = resolve; });
 
-// Live-sync subscribers. Pages register here to re-render in place whenever
-// Firebase pushes a new projects/activity snapshot (or a local write occurs).
+// Live sync subscribers
 const projectSubs = [];
 const activitySubs = [];
 let lastProjectsSig = '';
 let lastActivitySig = '';
 
 function signature(list) {
-  // Stable across Firebase key ordering and local object insertion order.
   return JSON.stringify((list || []).map(item => {
     const o = {};
     Object.keys(item || {}).sort().forEach(k => { o[k] = item[k]; });
     return o;
   }).sort((a, b) => String(a.id).localeCompare(String(b.id))));
 }
-function subscribeProjects(fn) { projectSubs.push(fn); return () => { const i = projectSubs.indexOf(fn); if (i > -1) projectSubs.splice(i, 1); }; }
-function subscribeActivity(fn) { activitySubs.push(fn); return () => { const i = activitySubs.indexOf(fn); if (i > -1) activitySubs.splice(i, 1); }; }
+
+function subscribeProjects(fn) {
+  projectSubs.push(fn);
+  return () => {
+    const i = projectSubs.indexOf(fn);
+    if (i > -1) projectSubs.splice(i, 1);
+  };
+}
+
+function subscribeActivity(fn) {
+  activitySubs.push(fn);
+  return () => {
+    const i = activitySubs.indexOf(fn);
+    if (i > -1) activitySubs.splice(i, 1);
+  };
+}
+
 function notifyProjects() {
   const sig = signature(projectsCache);
   if (sig === lastProjectsSig) return;
   lastProjectsSig = sig;
-  projectSubs.forEach(fn => { try { fn(projectsCache); } catch (e) { /* subscriber error */ } });
+  projectSubs.forEach(fn => { try { fn(projectsCache); } catch (e) {} });
 }
+
 function notifyActivity() {
   const sig = signature(activityCache);
   if (sig === lastActivitySig) return;
   lastActivitySig = sig;
-  activitySubs.forEach(fn => { try { fn(activityCache); } catch (e) { /* subscriber error */ } });
+  activitySubs.forEach(fn => { try { fn(activityCache); } catch (e) {} });
 }
 
-function settle() {
+function settle(source) {
   if (settled) return;
   settled = true;
-  resolveReady({ source: useFirebase ? 'firebase' : 'localStorage' });
+  resolveReady({ source });
 }
+
 function ready() { return readyPromise; }
 
-function uid() {
-  return 'p_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+function uid(prefix = 'p_') {
+  return prefix + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
 }
 
-/* ---------- Firebase helpers ---------- */
-function objectToArray(obj) {
-  if (!obj || typeof obj !== 'object') return [];
-  return Object.keys(obj).map(k => ({ ...(obj[k] || {}), id: (obj[k] && obj[k].id) || k }));
+function getAdminToken() {
+  try { return sessionStorage.getItem(ADMIN_TOKEN_KEY) || ''; } catch (e) { return ''; }
 }
-function arrayToObject(list) {
-  const obj = {};
-  (list || []).forEach(item => { obj[item.id] = item; });
-  return obj;
+
+function getAuthHeaders() {
+  const token = getAdminToken();
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  return headers;
 }
+
 function localSave(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage unavailable */ }
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
 }
 
-function writeProjects(list) {
-  projectsCache = list;
-  localSave(STORE_KEY, list);
-  notifyProjects();
-  if (useFirebase && db) db.child('projects').set(arrayToObject(list)).catch(() => {});
-}
-function writeActivity(list) {
-  activityCache = list;
-  localSave(ACTIVITY_KEY, list);
-  notifyActivity();
-  if (useFirebase && db) db.child('activity').set(arrayToObject(list)).catch(() => {});
-}
-
-function fallback() {
-  if (useFirebase && db) {
-    try { db.child('projects').off(); db.child('activity').off(); } catch (e) { /* ignore */ }
-  }
-  useFirebase = false;
-  db = null;
-  loadLocalProjects();
-  loadLocalActivity();
-  notifyProjects();
-  notifyActivity();
-  settle();
-}
-
-// Cross-tab sync when running in localStorage fallback mode.
-window.addEventListener('storage', e => {
-  if (useFirebase) return;
-  if (e.key === STORE_KEY) { projectsCache = null; loadLocalProjects(); notifyProjects(); }
-  if (e.key === ACTIVITY_KEY) { activityCache = null; loadLocalActivity(); notifyActivity(); }
-});
-
-function init() {
-  // If Firebase cannot be reached (offline or rules denial), keep the site usable.
-  const timer = setTimeout(() => { if (!settled) fallback(); }, 4000);
-
-  try {
-    if (typeof firebase === 'undefined' || !firebase.database) throw new Error('Firebase SDK not loaded');
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-
-    const root = firebase.database().ref(DB_ROOT);
-    db = root;
-    useFirebase = true;
-    window.ExpoDB = root;
-
-    root.child('projects').on('value', snapshot => {
-      clearTimeout(timer);
-      const val = snapshot.val();
-      // An empty database stays empty — projects only arrive via submissions.
-      projectsCache = objectToArray(val);
-      localSave(STORE_KEY, projectsCache);
-      notifyProjects();
-      settle();
-    }, () => { clearTimeout(timer); fallback(); });
-
-    root.child('activity').on('value', snapshot => {
-      activityCache = objectToArray(snapshot.val()).sort((a, b) => (b.at || 0) - (a.at || 0));
-      localSave(ACTIVITY_KEY, activityCache);
-      notifyActivity();
-    }, () => {});
-  } catch (e) {
-    clearTimeout(timer);
-    fallback();
-  }
-}
-
-/* ---------- Public synchronous API ---------- */
 function loadLocalProjects() {
   if (projectsCache) return projectsCache;
   try {
@@ -165,41 +100,180 @@ function loadLocalProjects() {
   localSave(STORE_KEY, projectsCache);
   return projectsCache;
 }
+
 function loadLocalActivity() {
   if (activityCache) return activityCache;
-  try { activityCache = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]'); }
-  catch (e) { activityCache = []; }
+  try {
+    activityCache = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
+  } catch (e) { activityCache = []; }
   return activityCache;
 }
 
-function getProjects() { return loadLocalProjects().slice(); }
-function saveProjects(list) { writeProjects(list); }
-function getProjectById(id) { return getProjects().find(p => p.id === id) || null; }
+// Polling and API synchronization
+async function syncFromApi() {
+  try {
+    const pRes = await fetch('/api/projects', { method: 'GET', cache: 'no-store' });
+    if (pRes.ok) {
+      const data = await pRes.json();
+      if (Array.isArray(data.projects)) {
+        projectsCache = data.projects;
+        localSave(STORE_KEY, projectsCache);
+        notifyProjects();
+        isApiConnected = true;
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const aRes = await fetch('/api/activity', { method: 'GET', cache: 'no-store' });
+    if (aRes.ok) {
+      const aData = await aRes.json();
+      if (Array.isArray(aData.activity)) {
+        activityCache = aData.activity;
+        localSave(ACTIVITY_KEY, activityCache);
+        notifyActivity();
+      }
+    }
+  } catch (e) {}
+}
+
+async function init() {
+  loadLocalProjects();
+  loadLocalActivity();
+
+  try {
+    const health = await fetch('/api/health', { method: 'GET', cache: 'no-store' });
+    if (health.ok) {
+      isApiConnected = true;
+      await syncFromApi();
+      settle('api');
+      // Background sync every 4 seconds for real-time collaborative updates
+      setInterval(syncFromApi, 4000);
+      return;
+    }
+  } catch (e) {
+    // API not running on this domain/host (e.g. static file preview)
+  }
+
+  // Fallback to local storage if API is unreachable
+  settle('local');
+}
+
+// Storage event listener for cross-tab sync in local mode
+window.addEventListener('storage', e => {
+  if (isApiConnected) return;
+  if (e.key === STORE_KEY) {
+    projectsCache = null;
+    loadLocalProjects();
+    notifyProjects();
+  }
+  if (e.key === ACTIVITY_KEY) {
+    activityCache = null;
+    loadLocalActivity();
+    notifyActivity();
+  }
+});
+
+/* ==================== PUBLIC API ==================== */
+
+function getProjects() {
+  return loadLocalProjects().slice();
+}
+
+function getProjectById(id) {
+  return getProjects().find(p => p.id === id) || null;
+}
+
+function saveProjects(list) {
+  projectsCache = list;
+  localSave(STORE_KEY, list);
+  notifyProjects();
+}
 
 function addProject(p) {
-  const list = getProjects();
   const project = {
-    id: uid(), status: 'pending', featured: false,
-    createdAt: Date.now(), reviewedAt: null, reviewNote: '',
+    id: uid(),
+    status: 'pending',
+    featured: false,
+    createdAt: Date.now(),
+    reviewedAt: null,
+    reviewNote: '',
     ...p
   };
-  list.unshift(project);
-  writeProjects(list);
+
+  const current = getProjects();
+  current.unshift(project);
+  saveProjects(current);
+
+  if (isApiConnected) {
+    fetch('/api/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(project)
+    }).then(res => res.json()).then(data => {
+      if (data && data.project && data.project.id) {
+        const list = getProjects();
+        const idx = list.findIndex(x => x.id === project.id);
+        if (idx !== -1) {
+          list[idx] = data.project;
+          saveProjects(list);
+        }
+      }
+    }).catch(e => console.warn('API addProject error:', e));
+  }
+
   return project;
 }
+
 function updateProject(id, patch) {
   const list = getProjects();
-  const i = list.findIndex(p => p.id === id);
-  if (i === -1) return null;
-  list[i] = { ...list[i], ...patch };
-  writeProjects(list);
-  return list[i];
+  const idx = list.findIndex(p => p.id === id);
+  if (idx === -1) return null;
+
+  list[idx] = { ...list[idx], ...patch };
+  saveProjects(list);
+
+  if (isApiConnected) {
+    fetch('/api/projects/' + encodeURIComponent(id), {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(patch)
+    }).then(res => res.json()).then(data => {
+      if (data && data.project) {
+        const fresh = getProjects();
+        const freshIdx = fresh.findIndex(x => x.id === id);
+        if (freshIdx !== -1) {
+          fresh[freshIdx] = data.project;
+          saveProjects(fresh);
+        }
+      }
+    }).catch(e => console.warn('API updateProject error:', e));
+  }
+
+  return list[idx];
 }
+
 function deleteProject(id) {
-  writeProjects(getProjects().filter(p => p.id !== id));
+  const filtered = getProjects().filter(p => p.id !== id);
+  saveProjects(filtered);
+
+  if (isApiConnected) {
+    fetch('/api/projects/' + encodeURIComponent(id), {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    }).catch(e => console.warn('API deleteProject error:', e));
+  }
 }
+
 function clearProjects() {
-  writeProjects([]);
+  saveProjects([]);
+
+  if (isApiConnected) {
+    fetch('/api/admin/reset', {
+      method: 'POST',
+      headers: getAuthHeaders()
+    }).catch(e => console.warn('API clearProjects error:', e));
+  }
 }
 
 function stats() {
@@ -212,33 +286,105 @@ function stats() {
   };
 }
 
-function getActivity() { return loadLocalActivity().slice(); }
+function getActivity() {
+  return loadLocalActivity().slice();
+}
+
 function logActivity(action, detail) {
-  const entry = { id: uid(), action, detail, at: Date.now() };
-  writeActivity([entry, ...getActivity()].slice(0, 40));
+  const entry = { id: uid('act_'), action, detail, at: Date.now() };
+  const updated = [entry, ...getActivity()].slice(0, 40);
+  activityCache = updated;
+  localSave(ACTIVITY_KEY, updated);
+  notifyActivity();
 }
 
 function isAdminLoggedIn() {
-  try { return sessionStorage.getItem(ADMIN_KEY) === '1'; } catch (e) { return false; }
-}
-function adminLogin(user, pass) {
-  if (user === ADMIN_CREDS.user && pass === ADMIN_CREDS.pass) {
-    try { sessionStorage.setItem(ADMIN_KEY, '1'); } catch (e) { /* ignore */ }
-    return true;
+  try {
+    return Boolean(sessionStorage.getItem(ADMIN_TOKEN_KEY));
+  } catch (e) {
+    return false;
   }
-  return false;
 }
-function adminLogout() { try { sessionStorage.removeItem(ADMIN_KEY); } catch (e) { /* ignore */ } }
+
+async function verifyAdminSession() {
+  const token = getAdminToken();
+  if (!token) return false;
+
+  try {
+    const res = await fetch('/api/auth/verify', {
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return Boolean(data.authenticated);
+    }
+  } catch (e) {}
+
+  return isAdminLoggedIn();
+}
+
+async function adminLogin(user, pass) {
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user, pass })
+    });
+    const data = await res.json();
+    if (res.ok && data.success && data.token) {
+      sessionStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+      sessionStorage.setItem(ADMIN_USER_KEY, data.user || user);
+      return { success: true, user: data.user || user };
+    }
+    return { success: false, error: data.error || 'Invalid credentials' };
+  } catch (e) {
+    return { success: false, error: 'Network error connecting to backend API.' };
+  }
+}
+
+async function adminLogout() {
+  try {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+  } catch (e) {}
+
+  try {
+    sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+    sessionStorage.removeItem(ADMIN_USER_KEY);
+  } catch (e) {}
+}
 
 function initials(name) {
   return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
 
 window.ExpoStore = {
-  CATEGORIES, firebaseConfig, ready, getProjects, saveProjects, addProject, updateProject,
-  deleteProject, clearProjects, getProjectById, isAdminLoggedIn, adminLogin, adminLogout, stats,
-  initials, uid, getActivity, logActivity, subscribeProjects, subscribeActivity,
-  get backend() { return useFirebase ? 'firebase' : 'localStorage'; }
+  CATEGORIES,
+  ready,
+  getProjects,
+  saveProjects,
+  addProject,
+  updateProject,
+  deleteProject,
+  clearProjects,
+  getProjectById,
+  isAdminLoggedIn,
+  verifyAdminSession,
+  adminLogin,
+  adminLogout,
+  stats,
+  initials,
+  uid,
+  getActivity,
+  logActivity,
+  subscribeProjects,
+  subscribeActivity,
+  get backend() {
+    return isApiConnected ? 'vercel-api' : 'localStorage';
+  }
 };
 
 init();
