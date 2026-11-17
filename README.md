@@ -33,7 +33,7 @@ Demo credentials are shown on the login screen. Change them in `js/store.js` (`A
 - Edit every project field (title, category, student, description, links, tags, review note, status, featured flag)
 - **Approve**, **Reject** (with reason), **Delete**, and **Feature** projects
 - Category analytics bars on the overview
-- Recent-activity log recording every approve, reject, edit, delete and reset
+- Recent-activity log recording every approve, reject, edit, delete and clear
 - Export all data as JSON
 - Clear all projects (with confirmation)
 
