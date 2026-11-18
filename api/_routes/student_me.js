@@ -2,6 +2,24 @@ const { getAuthenticatedStudent } = require('../_lib/auth');
 const { getProjectsByStudentId, getStudentVote, getStudentById, updateStudent } = require('../_lib/db');
 const { sendJson, handleCors, parseJsonBody } = require('../_lib/helper');
 
+function formatStudent(s) {
+  return {
+    id: s.id,
+    studentCode: s.studentCode || ('EXP-' + (s.id || '').slice(2, 6).toUpperCase()),
+    name: s.name,
+    email: s.email,
+    grade: (s.grade && s.grade !== 'Student') ? s.grade : '',
+    admissionNo: s.admissionNo || '',
+    rollNo: s.rollNo || '',
+    partnerNames: s.partnerNames || '',
+    partnerRollNos: s.partnerRollNos || '',
+    teamMembers: Array.isArray(s.teamMembers) ? s.teamMembers : [],
+    picture: s.picture || '',
+    isGoogle: !!s.googleId,
+    createdAt: s.createdAt || Date.now()
+  };
+}
+
 module.exports = async function handler(req, res) {
   if (handleCors(req, res)) return;
 
@@ -20,25 +38,14 @@ module.exports = async function handler(req, res) {
         rollNo: body.rollNo,
         partnerNames: body.partnerNames,
         partnerRollNos: body.partnerRollNos,
+        teamMembers: body.teamMembers,
         name: body.name
       });
 
       return sendJson(res, 200, {
         success: true,
         message: 'Profile details updated successfully',
-        student: {
-          id: updated.id,
-          name: updated.name,
-          email: updated.email,
-          grade: updated.grade || 'Student',
-          admissionNo: updated.admissionNo || '',
-          rollNo: updated.rollNo || '',
-          partnerNames: updated.partnerNames || '',
-          partnerRollNos: updated.partnerRollNos || '',
-          picture: updated.picture || '',
-          isGoogle: !!updated.googleId,
-          createdAt: updated.createdAt || Date.now()
-        }
+        student: formatStudent(updated)
       });
     } catch (err) {
       console.error('Error updating student profile:', err);
@@ -54,19 +61,7 @@ module.exports = async function handler(req, res) {
 
     return sendJson(res, 200, {
       authenticated: true,
-      student: {
-        id: dbStudent.id,
-        name: dbStudent.name,
-        email: dbStudent.email,
-        grade: dbStudent.grade || 'Student',
-        admissionNo: dbStudent.admissionNo || '',
-        rollNo: dbStudent.rollNo || '',
-        partnerNames: dbStudent.partnerNames || '',
-        partnerRollNos: dbStudent.partnerRollNos || '',
-        picture: dbStudent.picture || '',
-        isGoogle: !!dbStudent.googleId,
-        createdAt: dbStudent.createdAt || Date.now()
-      },
+      student: formatStudent(dbStudent),
       myProjects,
       votedProjectId
     });

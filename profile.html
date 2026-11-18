@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>My Profile — Expo 2026</title>
-<meta name="description" content="View and manage your student profile, project submissions, and People's Choice Award vote for Expo 2026." />
+<meta name="description" content="View and manage your student profile, project team members, submissions, and People's Choice Award vote for Expo 2026." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
@@ -103,6 +103,23 @@
     letter-spacing: .06em;
     font-weight: 600;
   }
+  .team-card {
+    padding: 28px;
+    margin-bottom: 32px;
+    border-radius: var(--radius);
+  }
+  .team-member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
   .vote-box {
     padding: 24px;
     margin-bottom: 36px;
@@ -137,7 +154,7 @@
   }
   .account-details-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
     margin-top: 20px;
     padding-top: 20px;
@@ -203,7 +220,7 @@
         <span style="font-size:22px">📋</span>
         <div>
           <div style="font-weight:700;font-size:14px;color:var(--ink)">Complete Your School Details</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">Please add your Class, Admission Number, Roll Number, and Partner(s) to verify your exhibition projects.</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Please add your Class, Admission Number, and Roll Number to complete your exhibition credentials.</div>
         </div>
       </div>
       <button type="button" class="btn btn-primary btn-sm" id="completeNowBtn">Complete Details →</button>
@@ -220,6 +237,16 @@
               <span class="badge-tag" id="authBadge">Student</span>
             </div>
             <div style="color:var(--muted);font-size:14px" id="profEmail">student@school.edu</div>
+
+            <!-- UNIQUE STUDENT CODE CARD -->
+            <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <div style="display:inline-flex;align-items:center;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:4px 10px;gap:8px">
+                <span style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.06em">My Unique ID:</span>
+                <strong style="font-family:monospace;font-size:14px;color:var(--accent-2);letter-spacing:1px" id="profCode">EXP-....</strong>
+              </div>
+              <button type="button" class="btn btn-ghost btn-sm" id="copyCodeBtn" style="font-size:12px;padding:4px 10px">📋 Copy ID</button>
+              <span id="copyFeedback" style="font-size:12px;color:var(--success);display:none">✓ Copied!</span>
+            </div>
           </div>
         </div>
 
@@ -245,16 +272,16 @@
           <div class="detail-value" id="profRoll">—</div>
         </div>
         <div class="detail-item">
-          <div class="detail-label">Project Partner(s)</div>
-          <div class="detail-value" id="profPartners">—</div>
+          <div class="detail-label">Unique Student Code</div>
+          <div class="detail-value" id="profCodeText" style="font-family:monospace;font-size:13px;color:var(--accent-2)">—</div>
         </div>
         <div class="detail-item">
-          <div class="detail-label">Partner Roll No(s)</div>
-          <div class="detail-value" id="profPartnerRolls">—</div>
+          <div class="detail-label">Team Members</div>
+          <div class="detail-value" id="profTeamCount">Solo (0 partners)</div>
         </div>
         <div class="detail-item">
-          <div class="detail-label">Student ID</div>
-          <div class="detail-value" id="profId" style="font-family:monospace;font-size:12px">—</div>
+          <div class="detail-label">Internal ID</div>
+          <div class="detail-value" id="profId" style="font-family:monospace;font-size:11px;color:var(--muted)">—</div>
         </div>
       </div>
     </div>
@@ -280,6 +307,31 @@
         <div class="stat-label">People's Choice Vote</div>
         <div class="stat-num" id="statVote" style="color:var(--accent)">1/1</div>
         <div style="font-size:12px;color:var(--muted)">Vote quota status</div>
+      </div>
+    </div>
+
+    <!-- PROJECT TEAM / GROUP MEMBERS SECTION -->
+    <div class="glass team-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:14px">
+        <div>
+          <h2 style="font-size:20px;margin:0 0 4px">Project Team & Partners</h2>
+          <p style="margin:0;font-size:13px;color:var(--muted)">Add partners by their Unique Student ID. Their full details (Name, Class, Admission No, Roll No) will be fetched automatically.</p>
+        </div>
+      </div>
+
+      <!-- Add Partner By ID Form -->
+      <form id="addPartnerForm" style="display:flex;gap:10px;margin-bottom:20px;max-width:540px;flex-wrap:wrap">
+        <div style="flex:1;min-width:220px">
+          <input id="partnerLookupInput" placeholder="Enter Teammate's ID (e.g. EXP-7492)" required style="width:100%;text-transform:uppercase;font-family:monospace" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm" id="addPartnerBtn">+ Add Teammate</button>
+      </form>
+
+      <div id="lookupMsg" style="display:none;padding:10px 14px;border-radius:var(--radius);font-size:13px;margin-bottom:16px"></div>
+
+      <!-- Team Members List -->
+      <div id="teamList">
+        <!-- Rendered via JS -->
       </div>
     </div>
 
@@ -330,7 +382,7 @@
       <h2 style="font-size:20px;margin:0">Edit Student Details</h2>
       <button type="button" id="closeModalBtn" class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:18px;line-height:1">✕</button>
     </div>
-    <p style="color:var(--muted);font-size:13px;margin:0 0 20px">These details will be linked to your exhibition projects and displayed to teachers and judges.</p>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 20px">These credentials are saved to your student profile and auto-filled when submitting projects.</p>
 
     <div id="modalErr" style="display:none;background:rgba(179,65,42,0.1);color:var(--accent);padding:10px 12px;border-radius:var(--radius);font-size:13px;margin-bottom:14px"></div>
 
@@ -351,24 +403,9 @@
         </div>
       </div>
 
-      <div class="field" style="margin-bottom:14px">
+      <div class="field" style="margin-bottom:20px">
         <label for="m-adm">Admission Number *</label>
         <input id="m-adm" name="admissionNo" required placeholder="e.g. ADM202641" />
-      </div>
-
-      <div style="margin:20px 0 10px;padding-top:14px;border-top:1px solid var(--border)">
-        <div style="font-size:13px;font-weight:700;margin-bottom:2px">Team / Partner Details (Optional)</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">If you are working with a partner or team on your exhibition exhibit:</div>
-      </div>
-
-      <div class="field" style="margin-bottom:14px">
-        <label for="m-partner">Partner Name(s)</label>
-        <input id="m-partner" name="partnerNames" placeholder="e.g. Priya Patel, Rohan Das (leave blank if solo)" />
-      </div>
-
-      <div class="field" style="margin-bottom:22px">
-        <label for="m-partner-roll">Partner Roll Number(s)</label>
-        <input id="m-partner-roll" name="partnerRollNos" placeholder="e.g. 18, 32" />
       </div>
 
       <div style="display:flex;justify-content:flex-end;gap:10px">
@@ -393,6 +430,9 @@
   const modal = document.getElementById('editModal');
   const editForm = document.getElementById('editDetailsForm');
   const modalErr = document.getElementById('modalErr');
+  const partnerForm = document.getElementById('addPartnerForm');
+  const partnerInput = document.getElementById('partnerLookupInput');
+  const lookupMsg = document.getElementById('lookupMsg');
 
   function openModal() {
     modalErr.style.display = 'none';
@@ -401,8 +441,6 @@
       document.getElementById('m-grade').value = (currentStudent.grade && currentStudent.grade !== 'Student') ? currentStudent.grade : '';
       document.getElementById('m-adm').value = currentStudent.admissionNo || '';
       document.getElementById('m-roll').value = currentStudent.rollNo || '';
-      document.getElementById('m-partner').value = currentStudent.partnerNames || '';
-      document.getElementById('m-partner-roll').value = currentStudent.partnerRollNos || '';
     }
     modal.style.display = 'flex';
   }
@@ -420,6 +458,88 @@
     if (e.target === modal) closeModal();
   });
 
+  // Copy Code Button
+  document.getElementById('copyCodeBtn').addEventListener('click', () => {
+    const code = document.getElementById('profCode').textContent;
+    if (code && navigator.clipboard) {
+      navigator.clipboard.writeText(code).then(() => {
+        const feedback = document.getElementById('copyFeedback');
+        feedback.style.display = 'inline';
+        setTimeout(() => feedback.style.display = 'none', 2000);
+      });
+    }
+  });
+
+  // Add Partner Form (Auto-Fetch by Unique ID)
+  partnerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    lookupMsg.style.display = 'none';
+    const code = (partnerInput.value || '').trim().toUpperCase();
+    if (!code) return;
+
+    const btn = document.getElementById('addPartnerBtn');
+    btn.disabled = true;
+    btn.textContent = 'Searching...';
+
+    try {
+      const found = await S.lookupStudent(code);
+      if (!found) {
+        throw new Error('No student found matching "' + code + '".');
+      }
+
+      // Check if already in team
+      const team = Array.isArray(currentStudent.teamMembers) ? [...currentStudent.teamMembers] : [];
+      if (team.some(m => m.id === found.id || m.studentCode === found.studentCode)) {
+        throw new Error(`${found.name} is already in your project team.`);
+      }
+
+      team.push({
+        id: found.id,
+        studentCode: found.studentCode,
+        name: found.name,
+        grade: found.grade,
+        admissionNo: found.admissionNo,
+        rollNo: found.rollNo,
+        picture: found.picture
+      });
+
+      // Save to backend
+      const res = await S.updateStudentProfile({ teamMembers: team });
+      if (res && res.success) {
+        partnerInput.value = '';
+        lookupMsg.textContent = `✓ Added ${found.name} (${found.grade || 'Student'}, Roll: ${found.rollNo || '—'}) to your team!`;
+        lookupMsg.style.background = 'rgba(63, 115, 87, 0.12)';
+        lookupMsg.style.color = 'var(--success)';
+        lookupMsg.style.border = '1px solid rgba(63, 115, 87, 0.3)';
+        lookupMsg.style.display = 'block';
+        setTimeout(() => lookupMsg.style.display = 'none', 3500);
+        await renderProfile();
+      }
+    } catch (err) {
+      lookupMsg.textContent = err.message || 'Student not found.';
+      lookupMsg.style.background = 'rgba(179, 65, 42, 0.12)';
+      lookupMsg.style.color = 'var(--accent)';
+      lookupMsg.style.border = '1px solid rgba(179, 65, 42, 0.3)';
+      lookupMsg.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '+ Add Teammate';
+    }
+  });
+
+  // Remove Partner Handler
+  window.removeTeamMember = async function(partnerCode) {
+    if (!confirm('Remove this partner from your project group?')) return;
+    const team = (currentStudent.teamMembers || []).filter(m => m.studentCode !== partnerCode && m.id !== partnerCode);
+    try {
+      await S.updateStudentProfile({ teamMembers: team });
+      await renderProfile();
+    } catch (err) {
+      alert('Error updating team: ' + err.message);
+    }
+  };
+
+  // Edit Student Form Submit
   editForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     modalErr.style.display = 'none';
@@ -432,9 +552,7 @@
       name: fd.get('name'),
       grade: fd.get('grade'),
       admissionNo: fd.get('admissionNo'),
-      rollNo: fd.get('rollNo'),
-      partnerNames: fd.get('partnerNames'),
-      partnerRollNos: fd.get('partnerRollNos')
+      rollNo: fd.get('rollNo')
     };
 
     try {
@@ -474,6 +592,11 @@
     const student = (profile && profile.student) || S.getStudentUser() || {};
     currentStudent = student;
 
+    // Unique Student Code
+    const studentCode = student.studentCode || ('EXP-' + (student.id || '').slice(2, 6).toUpperCase());
+    document.getElementById('profCode').textContent = studentCode;
+    document.getElementById('profCodeText').textContent = studentCode;
+
     // Notice banner if profile is incomplete
     const isProfileIncomplete = !student.admissionNo || !student.rollNo || !student.grade || student.grade === 'Student';
     document.getElementById('noticeBanner').style.display = isProfileIncomplete ? 'flex' : 'none';
@@ -484,9 +607,11 @@
     document.getElementById('profGrade').textContent = (student.grade && student.grade !== 'Student') ? student.grade : 'Not set';
     document.getElementById('profAdm').textContent = student.admissionNo || 'Not set';
     document.getElementById('profRoll').textContent = student.rollNo || 'Not set';
-    document.getElementById('profPartners').textContent = student.partnerNames || 'Solo (None)';
-    document.getElementById('profPartnerRolls').textContent = student.partnerRollNos || '—';
     document.getElementById('profId').textContent = student.id || '—';
+
+    // Team Count
+    const team = Array.isArray(student.teamMembers) ? student.teamMembers : [];
+    document.getElementById('profTeamCount').textContent = team.length > 0 ? `${team.length} partner(s)` : 'Solo (0 partners)';
 
     // Avatar
     const avatarBox = document.getElementById('avatarBox');
@@ -500,10 +625,40 @@
     const authBadge = document.getElementById('authBadge');
     if (student.isGoogle || (student.email && student.email.endsWith('@gmail.com'))) {
       authBadge.className = 'badge-tag google';
-      authBadge.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg> Google Account`;
+      authBadge.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg> Google Verified`;
     } else {
       authBadge.className = 'badge-tag';
       authBadge.textContent = 'Student Account';
+    }
+
+    // Render Team Members List
+    const teamListEl = document.getElementById('teamList');
+    if (!team.length) {
+      teamListEl.innerHTML = `
+        <div style="padding:16px 20px;border-radius:var(--radius);background:var(--surface-2);border:1px dashed var(--border);color:var(--muted);font-size:13px;text-align:center">
+          No team members added yet. You are currently submitting as a <strong>Solo Exhibit</strong>.<br/>
+          To work in a group, enter your partner's <strong>Unique ID</strong> above.
+        </div>`;
+    } else {
+      teamListEl.innerHTML = team.map(m => `
+        <div class="team-member-item">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="avatar" style="width:38px;height:38px;font-size:14px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700">
+              ${m.picture ? `<img src="${m.picture}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" />` : S.initials(m.name)}
+            </span>
+            <div>
+              <div style="font-weight:700;font-size:15px;color:var(--ink)">${m.name}</div>
+              <div style="color:var(--muted);font-size:12px">
+                Class: <strong>${m.grade || '—'}</strong> · Roll: <strong>${m.rollNo || '—'}</strong> · Adm: <strong>${m.admissionNo || '—'}</strong>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-family:monospace;font-size:12px;background:var(--surface);padding:3px 8px;border-radius:var(--radius);border:1px solid var(--border);color:var(--accent-2);font-weight:700">${m.studentCode || 'EXP'}</span>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="removeTeamMember('${m.studentCode || m.id}')" style="color:var(--accent);font-size:12px">Remove</button>
+          </div>
+        </div>
+      `).join('');
     }
 
     // Render Vote Info

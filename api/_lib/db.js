@@ -217,21 +217,51 @@ async function clearProjects() {
 
 /* ==================== STUDENTS API ==================== */
 
+function generateStudentCode(existingCodes = new Set()) {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  for (let attempt = 0; attempt < 100; attempt++) {
+    let code = 'EXP-';
+    for (let i = 0; i < 4; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    if (!existingCodes.has(code)) return code;
+  }
+  return 'EXP-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+}
+
 async function getStudents() {
+  let list = [];
   const url = getFirebaseUrl('students');
   if (url) {
     try {
       const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
       if (res.ok) {
         const val = await res.json();
-        return objectToArray(val);
+        list = objectToArray(val);
       }
     } catch (e) {
       console.warn('Firebase getStudents failed, using local store:', e.message);
     }
   }
-  const store = readLocalStore();
-  return store.students || [];
+  if (!list.length) {
+    const store = readLocalStore();
+    list = store.students || [];
+  }
+
+  // Ensure every student has an easy-to-share Unique Student Code (e.g. EXP-8492)
+  let changed = false;
+  const existingCodes = new Set(list.map(s => s.studentCode).filter(Boolean));
+  list.forEach(s => {
+    if (!s.studentCode) {
+      s.studentCode = generateStudentCode(existingCodes);
+      existingCodes.add(s.studentCode);
+      changed = true;
+    }
+  });
+  if (changed) {
+    saveAllStudents(list).catch(() => {});
+  }
+  return list;
 }
 
 async function saveAllStudents(list) {
@@ -263,7 +293,35 @@ async function getStudentByEmail(email) {
 async function getStudentById(id) {
   if (!id) return null;
   const students = await getStudents();
-  return students.find(s => s.id === id) || null;
+  return students.find(s => s.id === id || s.studentCode === id) || null;
+}
+
+async function lookupStudent(query) {
+  if (!query || typeof query !== 'string') return null;
+  const q = query.trim().toUpperCase();
+  const rawQ = query.trim().toLowerCase();
+  const list = await getStudents();
+
+  const found = list.find(s => {
+    if (s.studentCode && s.studentCode.toUpperCase() === q) return true;
+    if (s.id && s.id.toUpperCase() === q) return true;
+    if (s.admissionNo && s.admissionNo.toUpperCase() === q) return true;
+    if (s.email && s.email.toLowerCase() === rawQ) return true;
+    return false;
+  });
+
+  if (!found) return null;
+
+  return {
+    id: found.id,
+    studentCode: found.studentCode,
+    name: found.name,
+    grade: (found.grade && found.grade !== 'Student') ? found.grade : '',
+    admissionNo: found.admissionNo || '',
+    rollNo: found.rollNo || '',
+    email: found.email || '',
+    picture: found.picture || ''
+  };
 }
 
 async function createStudent({ name, email, grade, password }) {
@@ -273,24 +331,29 @@ async function createStudent({ name, email, grade, password }) {
     throw new Error('An account with this email already exists.');
   }
 
+  const list = await getStudents();
+  const existingCodes = new Set(list.map(s => s.studentCode).filter(Boolean));
+  const studentCode = generateStudentCode(existingCodes);
+
   const salt = generateSalt();
   const hash = hashPassword(password, salt);
 
   const student = {
     id: uid('s_'),
+    studentCode,
     name: name.trim(),
     email: cleanEmail,
     grade: grade.trim(),
+    teamMembers: [],
     hash,
     salt,
     createdAt: Date.now()
   };
 
-  const list = await getStudents();
   list.push(student);
   await saveAllStudents(list);
 
-  await logActivity('Student Registered', `${student.name} (${student.email}) registered`);
+  await logActivity('Student Registered', `${student.name} (${student.email}) registered with ID ${studentCode}`);
 
   const { hash: _, salt: __, ...safeStudent } = student;
   return safeStudent;
@@ -314,19 +377,24 @@ async function findOrCreateGoogleStudent({ name, email, googleId, picture, grade
       }
     }
   } else {
+    const list = await getStudents();
+    const existingCodes = new Set(list.map(s => s.studentCode).filter(Boolean));
+    const studentCode = generateStudentCode(existingCodes);
+
     student = {
       id: uid('s_'),
+      studentCode,
       name: (name || 'Student').trim(),
       email: cleanEmail,
       grade: (grade || 'Student').trim(),
       googleId: googleId || null,
       picture: picture || '',
+      teamMembers: [],
       createdAt: Date.now()
     };
-    const list = await getStudents();
     list.push(student);
     await saveAllStudents(list);
-    await logActivity('Google Sign In', `New student signed in with Google: ${student.name} (${student.email})`);
+    await logActivity('Google Sign In', `New student signed in with Google: ${student.name} (${student.email}) - Code ${studentCode}`);
   }
 
   const { hash: _, salt: __, ...safeStudent } = student;
@@ -339,13 +407,27 @@ async function updateStudent(studentId, patch) {
   const idx = list.findIndex(s => s.id === studentId);
   if (idx === -1) throw new Error('Student not found');
 
-  const allowedFields = ['grade', 'admissionNo', 'rollNo', 'partnerNames', 'partnerRollNos', 'name'];
+  const allowedFields = ['grade', 'admissionNo', 'rollNo', 'partnerNames', 'partnerRollNos', 'name', 'teamMembers'];
   const updatedPatch = {};
   allowedFields.forEach(f => {
     if (patch[f] !== undefined) {
-      updatedPatch[f] = typeof patch[f] === 'string' ? patch[f].trim() : patch[f];
+      if (f === 'teamMembers') {
+        updatedPatch[f] = Array.isArray(patch[f]) ? patch[f] : [];
+      } else {
+        updatedPatch[f] = typeof patch[f] === 'string' ? patch[f].trim() : patch[f];
+      }
     }
   });
+
+  // If teamMembers was updated, synchronize partnerNames and partnerRollNos
+  if (updatedPatch.teamMembers && Array.isArray(updatedPatch.teamMembers)) {
+    if (!updatedPatch.partnerNames) {
+      updatedPatch.partnerNames = updatedPatch.teamMembers.map(m => m.name).filter(Boolean).join(', ');
+    }
+    if (!updatedPatch.partnerRollNos) {
+      updatedPatch.partnerRollNos = updatedPatch.teamMembers.map(m => m.rollNo).filter(Boolean).join(', ');
+    }
+  }
 
   list[idx] = {
     ...list[idx],
@@ -354,7 +436,7 @@ async function updateStudent(studentId, patch) {
   };
 
   await saveAllStudents(list);
-  await logActivity('Student Profile Updated', `${list[idx].name} updated class / admission / partner details`);
+  await logActivity('Student Profile Updated', `${list[idx].name} updated profile details`);
 
   const { hash: _, salt: __, ...safeStudent } = list[idx];
   return safeStudent;
@@ -564,6 +646,7 @@ module.exports = {
   getStudents,
   getStudentByEmail,
   getStudentById,
+  lookupStudent,
   createStudent,
   updateStudent,
   findOrCreateGoogleStudent,

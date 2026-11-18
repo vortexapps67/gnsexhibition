@@ -10,6 +10,7 @@ const handlers = {
   '/api/student/login': require('./_routes/student_login'),
   '/api/student/me': require('./_routes/student_me'),
   '/api/student/update': require('./_routes/student_me'),
+  '/api/student/lookup': require('./_routes/student_lookup'),
   '/api/student/logout': require('./_routes/student_logout'),
   '/api/vote': require('./_routes/vote'),
   '/api/votes': require('./_routes/vote'),

@@ -303,11 +303,14 @@
     if (rollField && student.rollNo) {
       rollField.value = student.rollNo;
     }
-    if (partnerField && student.partnerNames) {
-      partnerField.value = student.partnerNames;
+    const partnersText = student.partnerNames || (Array.isArray(student.teamMembers) ? student.teamMembers.map(m => m.name).filter(Boolean).join(', ') : '');
+    const partnerRollsText = student.partnerRollNos || (Array.isArray(student.teamMembers) ? student.teamMembers.map(m => m.rollNo).filter(Boolean).join(', ') : '');
+
+    if (partnerField && partnersText) {
+      partnerField.value = partnersText;
     }
-    if (partnerRollField && student.partnerRollNos) {
-      partnerRollField.value = student.partnerRollNos;
+    if (partnerRollField && partnerRollsText) {
+      partnerRollField.value = partnerRollsText;
     }
 
     renderPreview();

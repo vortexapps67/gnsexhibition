@@ -523,6 +523,20 @@ async function updateStudentProfile(patch) {
   return data;
 }
 
+async function lookupStudent(query) {
+  const token = getStudentToken();
+  if (!token) throw new Error('You must be signed in to search for classmates.');
+
+  const res = await fetch('/api/student/lookup?code=' + encodeURIComponent(query), {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || 'Student not found');
+  }
+  return data.student;
+}
+
 /* ==================== PUBLIC API ==================== */
 
 function saveProjects(list) {
@@ -732,6 +746,7 @@ window.ExpoStore = {
   studentLogout,
   getStudentProfile,
   updateStudentProfile,
+  lookupStudent,
   stats,
   initials,
   uid,
