@@ -53,6 +53,8 @@ const handlers = {
   '/api/auth/login': require('./api/auth/login'),
   '/api/auth/verify': require('./api/auth/verify'),
   '/api/auth/logout': require('./api/auth/logout'),
+  '/api/auth/google': require('./api/auth/google'),
+  '/api/auth/google/callback': require('./api/auth/google/callback'),
   '/api/student/register': require('./api/student/register'),
   '/api/student/login': require('./api/student/login'),
   '/api/student/me': require('./api/student/me'),

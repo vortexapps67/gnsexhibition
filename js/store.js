@@ -437,6 +437,30 @@ async function studentLogin(email, password) {
   }
 }
 
+async function studentGoogleLogin(credential) {
+  try {
+    const res = await fetch('/api/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential })
+    });
+    const data = await res.json();
+    if (res.ok && data.success && data.token) {
+      localStorage.setItem(STUDENT_TOKEN_KEY, data.token);
+      localStorage.setItem(STUDENT_USER_KEY, JSON.stringify(data.student));
+      if (data.isAdmin && data.adminToken) {
+        sessionStorage.setItem(ADMIN_TOKEN_KEY, data.adminToken);
+        sessionStorage.setItem(ADMIN_USER_KEY, data.student.email);
+      }
+      await syncFromApi();
+      return { success: true, student: data.student, isAdmin: data.isAdmin };
+    }
+    return { success: false, error: data.error || 'Google sign-in failed' };
+  } catch (err) {
+    return { success: false, error: 'Network error connecting to backend API.' };
+  }
+}
+
 async function studentLogout() {
   try {
     await fetch('/api/student/logout', {
@@ -680,6 +704,7 @@ window.ExpoStore = {
   getStudentUser,
   studentRegister,
   studentLogin,
+  studentGoogleLogin,
   studentLogout,
   getStudentProfile,
   stats,

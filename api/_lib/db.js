@@ -292,6 +292,43 @@ async function createStudent({ name, email, grade, password }) {
   return safeStudent;
 }
 
+async function findOrCreateGoogleStudent({ name, email, googleId, picture, grade }) {
+  const cleanEmail = (email || '').toLowerCase().trim();
+  let student = await getStudentByEmail(cleanEmail);
+
+  if (student) {
+    const patch = {};
+    if (!student.googleId && googleId) patch.googleId = googleId;
+    if (!student.picture && picture) patch.picture = picture;
+    if (Object.keys(patch).length > 0) {
+      const list = await getStudents();
+      const idx = list.findIndex(s => s.id === student.id);
+      if (idx !== -1) {
+        list[idx] = { ...list[idx], ...patch };
+        await saveAllStudents(list);
+        student = list[idx];
+      }
+    }
+  } else {
+    student = {
+      id: uid('s_'),
+      name: (name || 'Student').trim(),
+      email: cleanEmail,
+      grade: (grade || 'Student').trim(),
+      googleId: googleId || null,
+      picture: picture || '',
+      createdAt: Date.now()
+    };
+    const list = await getStudents();
+    list.push(student);
+    await saveAllStudents(list);
+    await logActivity('Google Sign In', `New student signed in with Google: ${student.name} (${student.email})`);
+  }
+
+  const { hash: _, salt: __, ...safeStudent } = student;
+  return safeStudent;
+}
+
 async function getProjectsByStudentId(studentId, studentEmail = '') {
   const projects = await getProjects();
   const cleanEmail = (studentEmail || '').toLowerCase().trim();
@@ -497,6 +534,7 @@ module.exports = {
   getStudentByEmail,
   getStudentById,
   createStudent,
+  findOrCreateGoogleStudent,
   getProjectsByStudentId,
   getStudentVotesMap,
   getStudentVote,

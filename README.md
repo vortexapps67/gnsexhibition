@@ -32,6 +32,8 @@ All sensitive settings are loaded from environment variables on the server. Copy
 | `SESSION_SECRET` | Secret key used to cryptographically sign session tokens | Random secret string |
 | `FIREBASE_DATABASE_URL` | Firebase Realtime Database URL | `https://your-project-default-rtdb.firebaseio.com` |
 | `FIREBASE_AUTH_SECRET` | Optional database auth token/secret | (leave blank if public rules) |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID for 1-click Google Sign-In | `179200222340-vsv7qsqr1g49ns3nhgt0kuhshtt4es5t.apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret (kept securely on server) | Set in Vercel / `.env` |
 | `SITE_NAME` | Exhibition display name | `Expo 2026 School Exhibition` |
 | `EXHIBITION_YEAR` | Exhibition year | `2026` |
 | `ALLOW_PUBLIC_SUBMISSIONS` | Enable or disable public submission form | `true` |

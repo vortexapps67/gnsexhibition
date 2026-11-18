@@ -12,6 +12,7 @@ module.exports = async function handler(req, res) {
     categories: CATEGORIES,
     allowPublicSubmissions: process.env.ALLOW_PUBLIC_SUBMISSIONS !== 'false',
     backend: backendInfo.type,
+    googleClientId: process.env.GOOGLE_CLIENT_ID || '179200222340-vsv7qsqr1g49ns3nhgt0kuhshtt4es5t.apps.googleusercontent.com',
     features: {
       auth: true,
       realtimeSync: true,
