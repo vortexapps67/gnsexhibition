@@ -3,10 +3,10 @@ const { signStudentToken, signToken } = require('../_lib/auth');
 const { parseJsonBody, sendJson, handleCors } = require('../_lib/helper');
 
 function sanitizeRedirect(target) {
-  if (!target || typeof target !== 'string') return '/my-projects.html';
+  if (!target || typeof target !== 'string') return '/profile.html';
   let t = target.trim();
   if (!t.startsWith('/')) t = '/' + t;
-  if (t.startsWith('//') || t.startsWith('/api/')) return '/my-projects.html';
+  if (t.startsWith('//') || t.startsWith('/api/')) return '/profile.html';
   return t;
 }
 

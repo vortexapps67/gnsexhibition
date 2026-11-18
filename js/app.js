@@ -97,7 +97,7 @@
 
     const links = NAV.map(n => `<a class="nav-link ${n.href === cur ? 'active' : ''}" href="${n.href}">${n.label}</a>`).join('');
     const studentLinks = isStudent && student
-      ? `<a class="nav-link ${cur === 'my-projects.html' ? 'active' : ''}" href="my-projects.html">My Projects</a><a class="nav-link student-logout-btn" href="#" style="color:var(--muted)">Sign Out (${escapeHTML(student.name.split(' ')[0])})</a>`
+      ? `<a class="nav-link ${cur === 'profile.html' || cur === 'my-projects.html' ? 'active' : ''}" href="profile.html">My Profile</a><a class="nav-link student-logout-btn" href="#" style="color:var(--muted)">Sign Out (${escapeHTML(student.name.split(' ')[0])})</a>`
       : `<a class="nav-link ${cur === 'student-login.html' ? 'active' : ''}" href="student-login.html">Student Sign In</a>`;
 
     const adminLink = `<a class="nav-link ${cur === 'admin.html' ? 'active' : ''}" href="admin.html"${isAdmin ? ' style="color:var(--accent-2)"' : ''}>Admin</a>`;
