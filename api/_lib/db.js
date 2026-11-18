@@ -444,14 +444,105 @@ async function updateStudent(studentId, patch) {
   return safeStudent;
 }
 
-async function getProjectsByStudentId(studentId, studentEmail = '') {
+async function getProjectsByStudentId(studentId, studentEmail = '', student = null) {
   const projects = await getProjects();
   const cleanEmail = (studentEmail || '').toLowerCase().trim();
+  const targetStudent = student || (studentId ? await getStudentById(studentId) : null);
   return projects.filter(p => {
     if (p.studentId && p.studentId === studentId) return true;
     if (cleanEmail && (p.email || '').toLowerCase() === cleanEmail) return true;
+    if (targetStudent && isStudentProjectOwnerOrPartner(targetStudent, p)) return true;
     return false;
   });
+}
+
+function isStudentProjectOwnerOrPartner(student, project, projectAuthor = null) {
+  if (!student || !project) return false;
+
+  const sId = (student.id || '').trim();
+  const sCode = (student.studentCode || '').trim().toUpperCase();
+  const sEmail = (student.email || '').toLowerCase().trim();
+  const sName = (student.name || '').toLowerCase().trim();
+  const sAdm = (student.admissionNo || '').toLowerCase().trim();
+  const sRoll = (student.rollNo || '').toString().trim().toLowerCase();
+
+  const pStudentId = (project.studentId || '').trim();
+  const pEmail = (project.email || '').toLowerCase().trim();
+  const pName = (project.studentName || '').toLowerCase().trim();
+  const pAdm = (project.admissionNo || '').toLowerCase().trim();
+  const pRoll = (project.rollNo || '').toString().trim().toLowerCase();
+
+  // 1. Direct ID / Code match
+  if (sId && pStudentId && sId === pStudentId) return true;
+  if (sCode && pStudentId && sCode === pStudentId.toUpperCase()) return true;
+
+  // 2. Email match
+  if (sEmail && pEmail && sEmail === pEmail) return true;
+
+  // 3. Admission number match (if present)
+  if (sAdm && pAdm && sAdm === pAdm) return true;
+
+  // 4. Exact Author Name match (if both present and meaningful)
+  if (sName && pName && sName === pName) return true;
+
+  // 5. Partner Names in project: check if student is listed as a partner
+  if (project.partnerNames && sName) {
+    const partners = project.partnerNames
+      .split(/[,;\n/]+/)
+      .map(p => p.trim().toLowerCase())
+      .filter(Boolean);
+    if (partners.some(p => p === sName || (sName.length >= 4 && p.includes(sName)) || (p.length >= 4 && sName.includes(p)))) {
+      return true;
+    }
+  }
+
+  // 6. Partner Roll Nos in project: check if student's roll number is listed
+  if (project.partnerRollNos && sRoll) {
+    const partnerRolls = project.partnerRollNos
+      .split(/[,;\s]+/)
+      .map(r => r.trim().toLowerCase())
+      .filter(Boolean);
+    if (partnerRolls.includes(sRoll)) {
+      return true;
+    }
+  }
+
+  // 7. Team members checking
+  if (Array.isArray(student.teamMembers)) {
+    for (const m of student.teamMembers) {
+      if (!m) continue;
+      const mCode = (m.studentCode || '').trim().toUpperCase();
+      const mName = (m.name || '').toLowerCase().trim();
+      const mAdm = (m.admissionNo || '').toLowerCase().trim();
+      const mId = (m.id || '').trim();
+      if (sCode && mCode && mCode === sCode) return true;
+      if (pStudentId && mCode && (pStudentId.toUpperCase() === mCode || pStudentId === mId)) return true;
+      if (pName && mName && pName === mName) return true;
+      if (pAdm && mAdm && pAdm === mAdm) return true;
+    }
+  }
+
+  // Check if project author's team members include this student
+  if (projectAuthor) {
+    if (projectAuthor.id && sId && projectAuthor.id === sId) return true;
+    if (projectAuthor.studentCode && sCode && projectAuthor.studentCode.toUpperCase() === sCode) return true;
+    if (projectAuthor.email && sEmail && projectAuthor.email.toLowerCase().trim() === sEmail) return true;
+    if (Array.isArray(projectAuthor.teamMembers)) {
+      for (const m of projectAuthor.teamMembers) {
+        if (!m) continue;
+        const mCode = (m.studentCode || '').trim().toUpperCase();
+        const mName = (m.name || '').toLowerCase().trim();
+        const mAdm = (m.admissionNo || '').toLowerCase().trim();
+        const mId = (m.id || '').trim();
+        if (sCode && mCode && mCode === sCode) return true;
+        if (sId && mId && mId === sId) return true;
+        if (sName && mName && sName === mName) return true;
+        if (sAdm && mAdm && sAdm === mAdm) return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 /* ==================== SINGLE VOTE PER ACCOUNT API ==================== */
@@ -528,6 +619,19 @@ async function castStudentVote(studentId, projectId) {
     isVoted = false;
     previousVotedProject = projectId;
   } else {
+    // Prevent students from voting for their own or their team's project!
+    const student = await getStudentById(studentId);
+    let author = null;
+    if (project.studentId) {
+      author = await getStudentById(project.studentId);
+    } else if (project.email) {
+      author = await getStudentByEmail(project.email);
+    }
+
+    if (isStudentProjectOwnerOrPartner(student, project, author)) {
+      throw new Error("You cannot vote for your own project! Please vote for other students' exhibits to support them.");
+    }
+
     // Cast or change vote to this project (Strictly 1 vote per account!)
     previousVotedProject = currentVotedProject || null;
     votes[studentId] = projectId;
@@ -863,6 +967,7 @@ module.exports = {
   updateStudent,
   findOrCreateGoogleStudent,
   getProjectsByStudentId,
+  isStudentProjectOwnerOrPartner,
   getStudentVotesMap,
   getStudentVote,
   getVoteCounts,

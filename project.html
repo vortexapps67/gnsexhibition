@@ -88,7 +88,7 @@
             <div style="border-top:1px solid var(--border);padding-top:20px">
               <div class="kicker" style="margin-bottom:12px">Show your support</div>
               ${ExpoUI.voteButtonHTML(p.id, true)}
-              <div class="vote-hint" style="margin-top:9px">Sign in as a student to vote. Exactly 1 vote allowed per student account.</div>
+              <div class="vote-hint" style="margin-top:9px">${(ExpoStore && ExpoStore.isOwnProject && ExpoStore.isOwnProject(p.id)) ? '<span style="color:var(--accent);font-weight:600">This is your project. Students cannot vote for their own exhibits.</span>' : 'Sign in as a student to vote. Exactly 1 vote allowed per student account.'}</div>
             </div>
             ${p.email ? `<div style="color:var(--muted);font-size:13px;border-top:1px solid var(--border);padding-top:16px">Contact: <span style="color:var(--text)">${ExpoUI.escapeHTML(p.email)}</span></div>` : ''}
           </div>

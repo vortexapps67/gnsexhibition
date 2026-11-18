@@ -211,6 +211,15 @@
     if (!S) return '';
     const count = S.getVoteCount ? S.getVoteCount(id) : 0;
     const voted = S.hasVoted ? S.hasVoted(id) : false;
+    const isOwn = Boolean(S.isOwnProject && S.isOwnProject(id));
+
+    if (isOwn) {
+      if (detail) {
+        return `<button type="button" class="vote-btn own-project detail-vote" data-vote="${escapeHTML(id)}" disabled title="You cannot vote for your own exhibit" aria-label="Your own project"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="vote-count">${count}</span><span class="vote-label" style="margin-left:4px">Your Project (Cannot vote)</span></button>`;
+      }
+      return `<button type="button" class="vote-btn own-project" data-vote="${escapeHTML(id)}" disabled title="You cannot vote for your own exhibit" aria-label="Your own project"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="vote-count">${count}</span><span style="font-size:10px;font-weight:600;opacity:0.85">Mine</span></button>`;
+    }
+
     return `<button type="button" class="vote-btn${voted ? ' voted' : ''}${detail ? ' detail-vote' : ''}" data-vote="${escapeHTML(id)}" aria-pressed="${voted}" aria-label="${voted ? 'Remove your vote' : 'Vote for this project'}">${HEART}<span class="vote-count">${count}</span>${detail ? `<span class="vote-label">${voted ? 'Voted' : 'Vote'}</span>` : ''}</button>`;
   }
 
@@ -219,9 +228,29 @@
     if (!S) return;
     document.querySelectorAll('[data-vote]').forEach(btn => {
       const id = btn.dataset.vote;
-      const voted = Boolean(S.hasVoted && S.hasVoted(id));
       const count = S.getVoteCount ? S.getVoteCount(id) : 0;
       const detail = btn.classList.contains('detail-vote');
+      const isOwn = Boolean(S.isOwnProject && S.isOwnProject(id));
+
+      if (isOwn) {
+        btn.classList.remove('voted');
+        btn.classList.add('own-project');
+        btn.disabled = true;
+        btn.setAttribute('aria-pressed', 'false');
+        btn.setAttribute('aria-label', 'Your own project');
+        btn.setAttribute('title', 'You cannot vote for your own exhibit');
+        if (detail) {
+          btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="vote-count">${count}</span><span class="vote-label" style="margin-left:4px">Your Project (Cannot vote)</span>`;
+        } else {
+          btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="vote-count">${count}</span><span style="font-size:10px;font-weight:600;opacity:0.85">Mine</span>`;
+        }
+        return;
+      }
+
+      btn.disabled = false;
+      btn.classList.remove('own-project');
+      btn.removeAttribute('title');
+      const voted = Boolean(S.hasVoted && S.hasVoted(id));
       btn.classList.toggle('voted', voted);
       btn.setAttribute('aria-pressed', String(voted));
       btn.setAttribute('aria-label', voted ? 'Remove your vote' : 'Vote for this project');

@@ -331,6 +331,84 @@ function getStudentVotedId() {
   return studentVotedIdCache;
 }
 
+function isOwnProject(projectOrId, student) {
+  if (!projectOrId) return false;
+  let p = projectOrId;
+  if (typeof projectOrId === 'string') {
+    const list = loadLocalProjects();
+    p = list.find(item => item && item.id === projectOrId);
+  }
+  if (!p) return false;
+
+  const currentStudent = student || getStudentUser();
+  if (!currentStudent) return false;
+
+  const sId = (currentStudent.id || '').trim();
+  const sCode = (currentStudent.studentCode || '').trim().toUpperCase();
+  const sEmail = (currentStudent.email || '').toLowerCase().trim();
+  const sName = (currentStudent.name || '').toLowerCase().trim();
+  const sAdm = (currentStudent.admissionNo || '').toLowerCase().trim();
+  const sRoll = (currentStudent.rollNo || '').toString().trim().toLowerCase();
+
+  const pStudentId = (p.studentId || '').trim();
+  const pEmail = (p.email || '').toLowerCase().trim();
+  const pName = (p.studentName || '').toLowerCase().trim();
+  const pAdm = (p.admissionNo || '').toLowerCase().trim();
+  const pRoll = (p.rollNo || '').toString().trim().toLowerCase();
+
+  // 1. Direct ID / Student Code Match
+  if (sId && pStudentId && sId === pStudentId) return true;
+  if (sCode && pStudentId && sCode === pStudentId.toUpperCase()) return true;
+
+  // 2. Email Match
+  if (sEmail && pEmail && sEmail === pEmail) return true;
+
+  // 3. Admission No Match
+  if (sAdm && pAdm && sAdm === pAdm) return true;
+
+  // 4. Exact Author Name Match
+  if (sName && pName && sName === pName) return true;
+
+  // 5. Partner Names in Project
+  if (p.partnerNames && sName) {
+    const partners = p.partnerNames
+      .split(/[,;\n/]+/)
+      .map(part => part.trim().toLowerCase())
+      .filter(Boolean);
+    if (partners.some(part => part === sName || (sName.length >= 4 && part.includes(sName)) || (part.length >= 4 && sName.includes(part)))) {
+      return true;
+    }
+  }
+
+  // 6. Partner Roll Nos
+  if (p.partnerRollNos && sRoll) {
+    const partnerRolls = p.partnerRollNos
+      .split(/[,;\s]+/)
+      .map(r => r.trim().toLowerCase())
+      .filter(Boolean);
+    if (partnerRolls.includes(sRoll)) {
+      return true;
+    }
+  }
+
+  // 7. Team Members Registered in Student's Profile
+  if (Array.isArray(currentStudent.teamMembers)) {
+    for (const m of currentStudent.teamMembers) {
+      if (!m) continue;
+      const mCode = (m.studentCode || '').trim().toUpperCase();
+      const mName = (m.name || '').toLowerCase().trim();
+      const mAdm = (m.admissionNo || '').toLowerCase().trim();
+      const mId = (m.id || '').trim();
+      if (sCode && mCode && mCode === sCode) return true;
+      if (pStudentId && mCode && (pStudentId.toUpperCase() === mCode || pStudentId === mId)) return true;
+      if (pName && mName && pName === mName) return true;
+      if (pAdm && mAdm && pAdm === mAdm) return true;
+    }
+  }
+
+  return false;
+}
+
 async function toggleVote(id) {
   if (!id) return { voted: false, count: 0 };
 
@@ -344,6 +422,14 @@ async function toggleVote(id) {
       location.href = 'student-login.html?redirect=' + encodeURIComponent(curPage + location.search);
     }, 1200);
     return { voted: false, requireLogin: true };
+  }
+
+  // Prevent voting for own project
+  if (isOwnProject(id)) {
+    if (window.ExpoUI && window.ExpoUI.toast) {
+      ExpoUI.toast('You cannot vote for your own project! Please vote for other students\' exhibits to support them.', 'warning');
+    }
+    return { voted: false, ownProject: true };
   }
 
   if (isApiConnected) {
@@ -487,6 +573,9 @@ async function getStudentProfile() {
     });
     if (res.ok) {
       const data = await res.json();
+      if (data.student && typeof data.student === 'object') {
+        localStorage.setItem(STUDENT_USER_KEY, JSON.stringify(data.student));
+      }
       if (data.votedProjectId !== undefined) {
         studentVotedIdCache = data.votedProjectId;
         localSave(STUDENT_VOTED_KEY, studentVotedIdCache);
@@ -758,6 +847,7 @@ window.ExpoStore = {
   getVoteCount,
   hasVoted,
   getStudentVotedId,
+  isOwnProject,
   toggleVote,
   subscribeVotes,
   get previewMode() { return previewMode; },

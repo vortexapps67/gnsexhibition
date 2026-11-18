@@ -1333,7 +1333,19 @@ body.nav-open { overflow: hidden; }
 }
 .vote-btn:hover { transform: translateY(-1px); border-color: var(--accent); }
 .vote-btn.voted { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.vote-btn.own-project {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: .92;
+}
+.vote-btn.own-project:hover {
+  transform: none;
+  border-color: var(--border);
+}
 .vote-btn:disabled { opacity: .55; cursor: progress; }
+.vote-btn.own-project:disabled { opacity: .92; cursor: not-allowed; }
 .vote-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 .project-thumb .card-no { top: auto; bottom: 13px; right: 13px; }
 .img-fallback svg { width: 46px; height: 46px; opacity: .85; }

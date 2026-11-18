@@ -29,9 +29,16 @@ module.exports = async function handler(req, res) {
 
     const safeStudent = {
       id: student.id,
+      studentCode: student.studentCode || ('EXP-' + (student.id || '').slice(2, 6).toUpperCase()),
       name: student.name,
       email: student.email,
-      grade: student.grade,
+      grade: student.grade || '',
+      admissionNo: student.admissionNo || '',
+      rollNo: student.rollNo || '',
+      partnerNames: student.partnerNames || '',
+      partnerRollNos: student.partnerRollNos || '',
+      teamMembers: Array.isArray(student.teamMembers) ? student.teamMembers : [],
+      picture: student.picture || '',
       createdAt: student.createdAt
     };
 
