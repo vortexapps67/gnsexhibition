@@ -940,7 +940,8 @@
           </td>
           <td>
             <div style="font-weight:600">${escapeHTML(p.studentName)}</div>
-            <div style="color:var(--muted);font-size:12px">${escapeHTML(p.grade)}${p.email ? ` · ${escapeHTML(p.email)}` : ''}</div>
+            <div style="color:var(--muted);font-size:12px">${escapeHTML(p.grade)}${p.rollNo ? ` · Roll: ${escapeHTML(p.rollNo)}` : ''}${p.admissionNo ? ` · Adm: ${escapeHTML(p.admissionNo)}` : ''}${p.email ? ` · ${escapeHTML(p.email)}` : ''}</div>
+            ${p.partnerNames ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">Partner(s): <strong>${escapeHTML(p.partnerNames)}</strong> ${p.partnerRollNos ? `(${escapeHTML(p.partnerRollNos)})` : ''}</div>` : ''}
           </td>
           <td style="font-size:13px">${escapeHTML(p.category)}</td>
           <td><span class="status-pill ${p.status || 'pending'}">${p.status || 'pending'}</span></td>
@@ -1103,7 +1104,7 @@
     $('#previewTitle').textContent = p.title;
     $('#previewCatBadge').textContent = p.category;
     $('#previewStudent').textContent = p.studentName;
-    $('#previewGrade').textContent = p.grade;
+    $('#previewGrade').textContent = `${p.grade || ''}${p.rollNo ? ' · Roll: ' + p.rollNo : ''}${p.admissionNo ? ' · Adm: ' + p.admissionNo : ''}${p.partnerNames ? ' | Partners: ' + p.partnerNames + (p.partnerRollNos ? ' (' + p.partnerRollNos + ')' : '') : ''}`;
     $('#previewEmail').textContent = p.email || 'None provided';
     $('#previewDate').textContent = new Date(p.createdAt || Date.now()).toLocaleDateString();
     $('#previewVotesCount').textContent = S.getVoteCount ? S.getVoteCount(id) : 0;

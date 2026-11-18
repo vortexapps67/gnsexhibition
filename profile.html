@@ -16,7 +16,7 @@
 <style>
   .profile-header-card {
     padding: 32px;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
     border-radius: var(--radius);
   }
   .profile-top {
@@ -24,7 +24,7 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 24px;
+    gap: 20px;
   }
   .profile-user-info {
     display: flex;
@@ -68,9 +68,21 @@
     border-color: rgba(66, 133, 244, 0.3);
     background: rgba(66, 133, 244, 0.08);
   }
+  .notice-banner {
+    padding: 16px 20px;
+    border-radius: var(--radius);
+    background: rgba(196, 120, 32, 0.1);
+    border: 1px solid rgba(196, 120, 32, 0.28);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
   .stats-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 16px;
     margin-bottom: 32px;
   }
@@ -125,7 +137,7 @@
   }
   .account-details-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     gap: 16px;
     margin-top: 20px;
     padding-top: 20px;
@@ -137,13 +149,45 @@
   .detail-label {
     color: var(--muted);
     margin-bottom: 4px;
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: .05em;
+    letter-spacing: .06em;
   }
   .detail-value {
     font-weight: 600;
     color: var(--ink);
+  }
+  /* Edit Profile Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-card {
+    width: 100%;
+    max-width: 520px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 26px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 540px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 </head>
@@ -152,6 +196,18 @@
 
 <main style="padding: 36px 0 80px;">
   <div class="container">
+
+    <!-- Incomplete Profile Alert Banner -->
+    <div id="noticeBanner" class="notice-banner" style="display:none">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:22px">📋</span>
+        <div>
+          <div style="font-weight:700;font-size:14px;color:var(--ink)">Complete Your School Details</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Please add your Class, Admission Number, Roll Number, and Partner(s) to verify your exhibition projects.</div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary btn-sm" id="completeNowBtn">Complete Details →</button>
+    </div>
 
     <!-- Profile Header Card -->
     <div class="glass profile-header-card">
@@ -168,8 +224,8 @@
         </div>
 
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button type="button" class="btn btn-ghost btn-sm" id="editDetailsBtn">✏ Edit Details</button>
           <a href="submit.html" class="btn btn-primary btn-sm">+ Submit Project</a>
-          <a href="projects.html" class="btn btn-ghost btn-sm">Explore Gallery</a>
           <button type="button" class="btn btn-ghost btn-sm" id="logoutBtn" style="color:var(--muted)">Sign Out</button>
         </div>
       </div>
@@ -177,20 +233,28 @@
       <!-- Account Metadata Details -->
       <div class="account-details-grid">
         <div class="detail-item">
-          <div class="detail-label">Grade / Division</div>
+          <div class="detail-label">Class / Section</div>
           <div class="detail-value" id="profGrade">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Admission Number</div>
+          <div class="detail-value" id="profAdm">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Roll Number</div>
+          <div class="detail-value" id="profRoll">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Project Partner(s)</div>
+          <div class="detail-value" id="profPartners">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Partner Roll No(s)</div>
+          <div class="detail-value" id="profPartnerRolls">—</div>
         </div>
         <div class="detail-item">
           <div class="detail-label">Student ID</div>
           <div class="detail-value" id="profId" style="font-family:monospace;font-size:12px">—</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">Account Security</div>
-          <div class="detail-value" id="profSecurity">Verified Session</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">Member Since</div>
-          <div class="detail-value" id="profCreated">—</div>
         </div>
       </div>
     </div>
@@ -259,6 +323,62 @@
   </div>
 </main>
 
+<!-- EDIT DETAILS MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="font-size:20px;margin:0">Edit Student Details</h2>
+      <button type="button" id="closeModalBtn" class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:18px;line-height:1">✕</button>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 20px">These details will be linked to your exhibition projects and displayed to teachers and judges.</p>
+
+    <div id="modalErr" style="display:none;background:rgba(179,65,42,0.1);color:var(--accent);padding:10px 12px;border-radius:var(--radius);font-size:13px;margin-bottom:14px"></div>
+
+    <form id="editDetailsForm">
+      <div class="field" style="margin-bottom:14px">
+        <label for="m-name">Student Full Name *</label>
+        <input id="m-name" name="name" required placeholder="e.g. Aarav Sharma" />
+      </div>
+
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="field">
+          <label for="m-grade">Class / Section *</label>
+          <input id="m-grade" name="grade" required placeholder="e.g. 10-A or 11 Science" />
+        </div>
+        <div class="field">
+          <label for="m-roll">Roll Number *</label>
+          <input id="m-roll" name="rollNo" required placeholder="e.g. 24" />
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:14px">
+        <label for="m-adm">Admission Number *</label>
+        <input id="m-adm" name="admissionNo" required placeholder="e.g. ADM202641" />
+      </div>
+
+      <div style="margin:20px 0 10px;padding-top:14px;border-top:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:700;margin-bottom:2px">Team / Partner Details (Optional)</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">If you are working with a partner or team on your exhibition exhibit:</div>
+      </div>
+
+      <div class="field" style="margin-bottom:14px">
+        <label for="m-partner">Partner Name(s)</label>
+        <input id="m-partner" name="partnerNames" placeholder="e.g. Priya Patel, Rohan Das (leave blank if solo)" />
+      </div>
+
+      <div class="field" style="margin-bottom:22px">
+        <label for="m-partner-roll">Partner Roll Number(s)</label>
+        <input id="m-partner-roll" name="partnerRollNos" placeholder="e.g. 18, 32" />
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px">
+        <button type="button" class="btn btn-ghost" id="cancelModalBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveDetailsBtn">Save Details</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <footer class="footer" id="footer"></footer>
 
 <script src="js/store.js"></script>
@@ -268,6 +388,72 @@
   ExpoUI.renderFooter(document.getElementById('footer'));
 
   const S = window.ExpoStore;
+  let currentStudent = null;
+
+  const modal = document.getElementById('editModal');
+  const editForm = document.getElementById('editDetailsForm');
+  const modalErr = document.getElementById('modalErr');
+
+  function openModal() {
+    modalErr.style.display = 'none';
+    if (currentStudent) {
+      document.getElementById('m-name').value = currentStudent.name || '';
+      document.getElementById('m-grade').value = (currentStudent.grade && currentStudent.grade !== 'Student') ? currentStudent.grade : '';
+      document.getElementById('m-adm').value = currentStudent.admissionNo || '';
+      document.getElementById('m-roll').value = currentStudent.rollNo || '';
+      document.getElementById('m-partner').value = currentStudent.partnerNames || '';
+      document.getElementById('m-partner-roll').value = currentStudent.partnerRollNos || '';
+    }
+    modal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    modal.style.display = 'none';
+  }
+
+  document.getElementById('editDetailsBtn').addEventListener('click', openModal);
+  document.getElementById('completeNowBtn').addEventListener('click', openModal);
+  document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+  document.getElementById('cancelModalBtn').addEventListener('click', closeModal);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  editForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    modalErr.style.display = 'none';
+    const btn = document.getElementById('saveDetailsBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const fd = new FormData(editForm);
+    const patch = {
+      name: fd.get('name'),
+      grade: fd.get('grade'),
+      admissionNo: fd.get('admissionNo'),
+      rollNo: fd.get('rollNo'),
+      partnerNames: fd.get('partnerNames'),
+      partnerRollNos: fd.get('partnerRollNos')
+    };
+
+    try {
+      const res = await S.updateStudentProfile(patch);
+      if (res && res.success) {
+        closeModal();
+        await renderProfile();
+      } else {
+        modalErr.textContent = (res && res.error) || 'Failed to save details.';
+        modalErr.style.display = 'block';
+      }
+    } catch (ex) {
+      modalErr.textContent = ex.message || 'Error communicating with server.';
+      modalErr.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save Details';
+    }
+  });
 
   S.ready().then(async () => {
     if (!S.isStudentLoggedIn()) {
@@ -286,18 +472,21 @@
   async function renderProfile() {
     const profile = await S.getStudentProfile();
     const student = (profile && profile.student) || S.getStudentUser() || {};
+    currentStudent = student;
+
+    // Notice banner if profile is incomplete
+    const isProfileIncomplete = !student.admissionNo || !student.rollNo || !student.grade || student.grade === 'Student';
+    document.getElementById('noticeBanner').style.display = isProfileIncomplete ? 'flex' : 'none';
 
     // Header & User Details
     document.getElementById('profName').textContent = student.name || 'Student';
     document.getElementById('profEmail').textContent = student.email || '';
-    document.getElementById('profGrade').textContent = student.grade || 'Student';
+    document.getElementById('profGrade').textContent = (student.grade && student.grade !== 'Student') ? student.grade : 'Not set';
+    document.getElementById('profAdm').textContent = student.admissionNo || 'Not set';
+    document.getElementById('profRoll').textContent = student.rollNo || 'Not set';
+    document.getElementById('profPartners').textContent = student.partnerNames || 'Solo (None)';
+    document.getElementById('profPartnerRolls').textContent = student.partnerRollNos || '—';
     document.getElementById('profId').textContent = student.id || '—';
-
-    if (student.createdAt) {
-      document.getElementById('profCreated').textContent = new Date(student.createdAt).toLocaleDateString(undefined, {
-        year: 'numeric', month: 'short', day: 'numeric'
-      });
-    }
 
     // Avatar
     const avatarBox = document.getElementById('avatarBox');
@@ -385,6 +574,7 @@
             <h3 style="font-size:18px;margin:0 0 8px;font-weight:700">${p.title}</h3>
             <div style="color:var(--accent);font-size:12px;font-weight:600;margin-bottom:10px">${p.category}</div>
             <p style="font-size:13px;line-height:1.6;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${p.description}</p>
+            ${p.partnerNames ? `<div style="font-size:12px;color:var(--muted);margin-top:8px"><strong>Team Partners:</strong> ${p.partnerNames} ${p.partnerRollNos ? '(' + p.partnerRollNos + ')' : ''}</div>` : ''}
             ${p.reviewNote ? `
               <div class="review-note">
                 <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Teacher Feedback</div>

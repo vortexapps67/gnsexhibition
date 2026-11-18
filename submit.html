@@ -47,7 +47,7 @@
             <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--success)"></span>
             <span style="font-size:13px">Verified Student: <strong id="loggedStudentLabel"></strong></span>
           </div>
-          <a href="my-projects.html" class="btn btn-ghost btn-sm" style="font-size:12px">My Submissions</a>
+          <a href="profile.html" class="btn btn-ghost btn-sm" style="font-size:12px">My Profile</a>
         </div>
 
         <form id="form" novalidate>
@@ -55,7 +55,11 @@
             <div class="field"><label for="f-title">Project Title *</label><input id="f-title" name="title" required placeholder="Your project title" /><small class="field-error" aria-live="polite"></small></div>
             <div class="field"><label for="f-category">Category *</label><select id="f-category" name="category" required></select><small class="field-error" aria-live="polite"></small></div>
             <div class="field"><label for="f-name">Your Name *</label><input id="f-name" name="studentName" required placeholder="Full name" /><small class="field-error" aria-live="polite"></small></div>
-            <div class="field"><label for="f-grade">Grade / Class *</label><input id="f-grade" name="grade" required placeholder="e.g. Grade 11" /><small class="field-error" aria-live="polite"></small></div>
+            <div class="field"><label for="f-grade">Grade / Class *</label><input id="f-grade" name="grade" required placeholder="e.g. 10-A or 11 Science" /><small class="field-error" aria-live="polite"></small></div>
+            <div class="field"><label for="f-adm">Admission Number</label><input id="f-adm" name="admissionNo" placeholder="e.g. ADM202641" /><small class="field-error" aria-live="polite"></small></div>
+            <div class="field"><label for="f-roll">Roll Number</label><input id="f-roll" name="rollNo" placeholder="e.g. 24" /><small class="field-error" aria-live="polite"></small></div>
+            <div class="field"><label for="f-partner">Partner Name(s)</label><input id="f-partner" name="partnerNames" placeholder="e.g. Priya Patel, Rohan Das (leave blank if solo)" /><small class="hint">For duo or team exhibits</small></div>
+            <div class="field"><label for="f-partner-roll">Partner Roll Number(s)</label><input id="f-partner-roll" name="partnerRollNos" placeholder="e.g. 18, 32" /><small class="hint">Roll numbers of partner(s)</small></div>
             <div class="field"><label for="f-email">Email</label><input id="f-email" name="email" type="email" placeholder="you@school.edu" /><small class="field-error" aria-live="polite"></small></div>
             <div class="field"><label for="f-image">Image URL</label><input id="f-image" name="imageUrl" placeholder="https://..." /><small class="hint">A hosted image link works best</small><small class="field-error" aria-live="polite"></small></div>
             <div class="field full"><label for="f-description">Description *</label><textarea id="f-description" name="description" required placeholder="Describe your project, what it does, and the impact..."></textarea><small class="field-error" aria-live="polite"></small></div>
@@ -246,7 +250,7 @@
       await S.addProject(data);
       localStorage.removeItem(DRAFT_KEY);
       ExpoUI.toast('Project submitted for review!', 'success');
-      setTimeout(() => { location.href = 'my-projects.html'; }, 900);
+      setTimeout(() => { location.href = 'profile.html'; }, 900);
     } catch (err) {
       console.error('Submission failed:', err);
       ExpoUI.toast('Submission failed. Please try again.', 'error');
@@ -259,31 +263,54 @@
   const profileBadge = document.getElementById('authProfileBadge');
   const loggedLabel = document.getElementById('loggedStudentLabel');
 
-  S.ready().then(() => {
+  S.ready().then(async () => {
     const isStudent = S.isStudentLoggedIn();
-    const student = S.getStudentUser();
-
-    if (!isStudent || !student) {
+    if (!isStudent) {
       gateNotice.style.display = 'flex';
       profileBadge.style.display = 'none';
-    } else {
-      gateNotice.style.display = 'none';
-      profileBadge.style.display = 'flex';
-      loggedLabel.textContent = `${student.name} (${student.grade})`;
-
-      const nameField = form.elements.studentName;
-      const gradeField = form.elements.grade;
-      const emailField = form.elements.email;
-
-      nameField.value = student.name;
-      gradeField.value = student.grade;
-      if (student.email) emailField.value = student.email;
-
-      nameField.readOnly = true;
-      gradeField.readOnly = true;
-      if (student.email) emailField.readOnly = true;
-      renderPreview();
+      return;
     }
+
+    const profile = await S.getStudentProfile();
+    const student = (profile && profile.student) || S.getStudentUser() || {};
+
+    gateNotice.style.display = 'none';
+    profileBadge.style.display = 'flex';
+    loggedLabel.textContent = `${student.name} ${student.grade && student.grade !== 'Student' ? '(' + student.grade + ')' : ''}`;
+
+    const nameField = form.elements.studentName;
+    const gradeField = form.elements.grade;
+    const emailField = form.elements.email;
+    const admField = form.elements.admissionNo;
+    const rollField = form.elements.rollNo;
+    const partnerField = form.elements.partnerNames;
+    const partnerRollField = form.elements.partnerRollNos;
+
+    if (nameField) {
+      nameField.value = student.name || '';
+      nameField.readOnly = true;
+    }
+    if (gradeField && student.grade && student.grade !== 'Student') {
+      gradeField.value = student.grade;
+    }
+    if (emailField && student.email) {
+      emailField.value = student.email;
+      emailField.readOnly = true;
+    }
+    if (admField && student.admissionNo) {
+      admField.value = student.admissionNo;
+    }
+    if (rollField && student.rollNo) {
+      rollField.value = student.rollNo;
+    }
+    if (partnerField && student.partnerNames) {
+      partnerField.value = student.partnerNames;
+    }
+    if (partnerRollField && student.partnerRollNos) {
+      partnerRollField.value = student.partnerRollNos;
+    }
+
+    renderPreview();
   });
 
   restoreDraft();

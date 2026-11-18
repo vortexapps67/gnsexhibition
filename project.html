@@ -66,9 +66,14 @@
                 <span class="avatar" style="width:40px;height:40px;font-size:15px">${S.initials(p.studentName)}</span>
                 <div>
                   <div style="font-weight:700">${p.studentName}</div>
-                  <div style="color:var(--muted);font-size:13px">${p.grade}</div>
+                  <div style="color:var(--muted);font-size:13px">${p.grade}${p.rollNo ? ' · Roll No: ' + p.rollNo : ''}${p.admissionNo ? ' · Adm: ' + p.admissionNo : ''}</div>
                 </div>
               </div>
+              ${p.partnerNames ? `
+                <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);font-size:13px">
+                  <span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em">Project Partner(s):</span>
+                  <div style="font-weight:600;color:var(--ink);margin-top:2px">${p.partnerNames} ${p.partnerRollNos ? '<span style="color:var(--muted);font-weight:normal">(Roll: ' + p.partnerRollNos + ')</span>' : ''}</div>
+                </div>` : ''}
             </div>
             <div class="detail-meta-row">
               <div><div style="color:var(--muted);font-size:12px">Status</div><span class="status-pill ${p.preview ? 'approved' : p.status}">${p.preview ? 'Sample' : p.status}</span></div>

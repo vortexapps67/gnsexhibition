@@ -52,10 +52,10 @@ module.exports = async function handler(req, res) {
 
     try {
       const body = await parseJsonBody(req);
-      const { title, description, imageUrl, demoUrl, repoUrl, tags } = body;
+      const { title, description, imageUrl, demoUrl, repoUrl, tags, admissionNo, rollNo, partnerNames, partnerRollNos } = body;
 
       const studentName = student ? student.name : (body.studentName || '').trim();
-      const grade = student ? student.grade : (body.grade || '').trim();
+      const grade = (body.grade || (student ? student.grade : '') || '').trim();
       const email = student ? student.email : (body.email || '').trim();
       const category = body.category;
 
@@ -71,6 +71,10 @@ module.exports = async function handler(req, res) {
         title,
         studentName,
         grade,
+        admissionNo: admissionNo || '',
+        rollNo: rollNo || '',
+        partnerNames: partnerNames || '',
+        partnerRollNos: partnerRollNos || '',
         email: email || '',
         category: validCat,
         description,

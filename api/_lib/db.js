@@ -133,7 +133,11 @@ async function addProject(projectData, student = null) {
     studentId: student ? student.id : (projectData.studentId || null),
     title: (projectData.title || '').trim(),
     studentName: student ? student.name : (projectData.studentName || '').trim(),
-    grade: student ? student.grade : (projectData.grade || '').trim(),
+    grade: (projectData.grade || (student ? student.grade : '')).trim(),
+    admissionNo: (projectData.admissionNo || (student ? student.admissionNo : '') || '').trim(),
+    rollNo: (projectData.rollNo || (student ? student.rollNo : '') || '').trim(),
+    partnerNames: (projectData.partnerNames || (student ? student.partnerNames : '') || '').trim(),
+    partnerRollNos: (projectData.partnerRollNos || (student ? student.partnerRollNos : '') || '').trim(),
     email: student ? student.email : (projectData.email || '').trim(),
     category: projectData.category || 'Other',
     description: (projectData.description || '').trim(),
@@ -326,6 +330,33 @@ async function findOrCreateGoogleStudent({ name, email, googleId, picture, grade
   }
 
   const { hash: _, salt: __, ...safeStudent } = student;
+  return safeStudent;
+}
+
+async function updateStudent(studentId, patch) {
+  if (!studentId) throw new Error('Student ID is required');
+  const list = await getStudents();
+  const idx = list.findIndex(s => s.id === studentId);
+  if (idx === -1) throw new Error('Student not found');
+
+  const allowedFields = ['grade', 'admissionNo', 'rollNo', 'partnerNames', 'partnerRollNos', 'name'];
+  const updatedPatch = {};
+  allowedFields.forEach(f => {
+    if (patch[f] !== undefined) {
+      updatedPatch[f] = typeof patch[f] === 'string' ? patch[f].trim() : patch[f];
+    }
+  });
+
+  list[idx] = {
+    ...list[idx],
+    ...updatedPatch,
+    updatedAt: Date.now()
+  };
+
+  await saveAllStudents(list);
+  await logActivity('Student Profile Updated', `${list[idx].name} updated class / admission / partner details`);
+
+  const { hash: _, salt: __, ...safeStudent } = list[idx];
   return safeStudent;
 }
 
@@ -534,6 +565,7 @@ module.exports = {
   getStudentByEmail,
   getStudentById,
   createStudent,
+  updateStudent,
   findOrCreateGoogleStudent,
   getProjectsByStudentId,
   getStudentVotesMap,

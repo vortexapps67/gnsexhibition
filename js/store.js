@@ -499,6 +499,30 @@ async function getStudentProfile() {
   return { authenticated: false };
 }
 
+async function updateStudentProfile(patch) {
+  const token = getStudentToken();
+  if (!token) throw new Error('You must be signed in to update your profile.');
+
+  const res = await fetch('/api/student/me', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    },
+    body: JSON.stringify(patch)
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || 'Failed to update profile details.');
+  }
+
+  const current = getStudentUser() || {};
+  const merged = { ...current, ...data.student };
+  localSave(STUDENT_USER_KEY, merged);
+  return data;
+}
+
 /* ==================== PUBLIC API ==================== */
 
 function saveProjects(list) {
@@ -707,6 +731,7 @@ window.ExpoStore = {
   studentGoogleLogin,
   studentLogout,
   getStudentProfile,
+  updateStudentProfile,
   stats,
   initials,
   uid,
