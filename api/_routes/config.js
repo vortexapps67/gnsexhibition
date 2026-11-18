@@ -1,5 +1,5 @@
-const { CATEGORIES, getBackendInfo } = require('./_lib/db');
-const { sendJson, handleCors } = require('./_lib/helper');
+const { CATEGORIES, getBackendInfo } = require('../_lib/db');
+const { sendJson, handleCors } = require('../_lib/helper');
 
 module.exports = async function handler(req, res) {
   if (handleCors(req, res)) return;

@@ -48,49 +48,17 @@ const MIME_TYPES = {
   '.woff2': 'font/woff2'
 };
 
-// Route handlers
-const handlers = {
-  '/api/auth/login': require('./api/auth/login'),
-  '/api/auth/verify': require('./api/auth/verify'),
-  '/api/auth/logout': require('./api/auth/logout'),
-  '/api/auth/google': require('./api/auth/google'),
-  '/api/auth/google/callback': require('./api/auth/google/callback'),
-  '/api/student/register': require('./api/student/register'),
-  '/api/student/login': require('./api/student/login'),
-  '/api/student/me': require('./api/student/me'),
-  '/api/student/logout': require('./api/student/logout'),
-  '/api/vote': require('./api/vote/index'),
-  '/api/votes': require('./api/vote/index'),
-  '/api/projects': require('./api/projects/index'),
-  '/api/activity': require('./api/activity/index'),
-  '/api/admin/reset': require('./api/admin/reset'),
-  '/api/config': require('./api/config'),
-  '/api/health': require('./api/health'),
-  projectItem: require('./api/projects/[id]')
-};
+// Single unified API Router
+const apiHandler = require('./api/index');
 
 const server = http.createServer(async (req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = parsedUrl.pathname.replace(/\/+$/, '') || '/';
   req.query = Object.fromEntries(parsedUrl.searchParams.entries());
 
-  // Exact routes (including /sitemap.xml)
-  if (handlers[pathname]) {
-    return handlers[pathname](req, res);
-  }
-
-  // Handle API routes
+  // Handle all API routes through single router
   if (pathname.startsWith('/api')) {
-    // Check dynamic /api/projects/:id
-    const projectMatch = pathname.match(/^\/api\/projects\/([^/]+)$/);
-    if (projectMatch) {
-      req.query.id = projectMatch[1];
-      return handlers.projectItem(req, res);
-    }
-
-    res.statusCode = 404;
-    res.setHeader('Content-Type', 'application/json');
-    return res.end(JSON.stringify({ error: `API route not found: ${pathname}` }));
+    return apiHandler(req, res);
   }
 
   // Handle Static Files
