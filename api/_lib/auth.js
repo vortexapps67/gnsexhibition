@@ -11,6 +11,7 @@ function getAdminCredentials() {
   };
 }
 
+// Token signing & verification (HMAC-SHA256)
 function signToken(payload) {
   const secret = getSecret();
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
@@ -39,6 +40,22 @@ function verifyToken(token) {
   }
 }
 
+// Password hashing for student accounts
+function generateSalt() {
+  return crypto.randomBytes(16).toString('hex');
+}
+
+function hashPassword(password, salt) {
+  return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+}
+
+function verifyPassword(password, hash, salt) {
+  if (!password || !hash || !salt) return false;
+  const testHash = hashPassword(password, salt);
+  return crypto.timingSafeEqual(Buffer.from(testHash, 'hex'), Buffer.from(hash, 'hex'));
+}
+
+// Cookie parser
 function parseCookies(req) {
   const list = {};
   const rc = req.headers && req.headers.cookie;
@@ -52,20 +69,21 @@ function parseCookies(req) {
   return list;
 }
 
-function getTokenFromReq(req) {
+function getTokenFromReq(req, cookieName = 'admin_session') {
   const authHeader = (req.headers && (req.headers.authorization || req.headers.Authorization)) || '';
   if (authHeader.startsWith('Bearer ')) {
     return authHeader.slice(7).trim();
   }
   const cookies = parseCookies(req);
-  if (cookies.admin_session) {
-    return cookies.admin_session;
+  if (cookies[cookieName]) {
+    return cookies[cookieName];
   }
   return null;
 }
 
+// Admin Auth
 function getAuthenticatedAdmin(req) {
-  const token = getTokenFromReq(req);
+  const token = getTokenFromReq(req, 'admin_session');
   if (!token) return null;
   const session = verifyToken(token);
   if (session && session.role === 'admin') {
@@ -91,12 +109,52 @@ function validateCredentials(user, pass) {
   return user.trim() === creds.user.trim() && pass === creds.pass;
 }
 
+// Student Auth
+function signStudentToken(student) {
+  return signToken({
+    id: student.id,
+    email: student.email,
+    name: student.name,
+    grade: student.grade,
+    role: 'student',
+    exp: Date.now() + 14 * 24 * 60 * 60 * 1000 // 14 days
+  });
+}
+
+function getAuthenticatedStudent(req) {
+  // Check Authorization header or student_session cookie
+  const token = getTokenFromReq(req, 'student_session');
+  if (!token) return null;
+  const session = verifyToken(token);
+  if (session && session.role === 'student') {
+    return session;
+  }
+  return null;
+}
+
+function requireStudent(req, res) {
+  const student = getAuthenticatedStudent(req);
+  if (!student) {
+    res.statusCode = 401;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ error: 'Unauthorized: Student authentication required. Please sign in.' }));
+    return null;
+  }
+  return student;
+}
+
 module.exports = {
   signToken,
   verifyToken,
+  generateSalt,
+  hashPassword,
+  verifyPassword,
   getTokenFromReq,
   getAuthenticatedAdmin,
   requireAdmin,
   validateCredentials,
-  getAdminCredentials
+  getAdminCredentials,
+  signStudentToken,
+  getAuthenticatedStudent,
+  requireStudent
 };

@@ -4,45 +4,90 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Submit Project — Expo 2026</title>
+<meta name="description" content="Submit your project to Expo 2026, the annual school exhibition. Share your idea, get feedback from the review panel and showcase your work." />
+<meta property="og:title" content="Submit Project — Expo 2026" />
+<meta property="og:description" content="Share your project with the whole school." />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#f4f1e9" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <link rel="icon" type="image/x-icon" href="favicon.ico" />
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
 <link rel="apple-touch-icon" href="school_logo.png" />
+<script>(function(){try{var t=localStorage.getItem('expo_theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.content=t==='dark'?'#171411':'#f4f1e9';}catch(e){document.documentElement.dataset.theme='light';}})()</script>
 <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 <nav class="nav"><div class="container" id="nav"></div></nav>
 
-<section style="padding:60px 0">
+<section class="page-intro page-intro-center">
   <div class="container">
-    <div style="text-align:center;margin-bottom:36px">
-      <div class="kicker">Submit</div>
-      <h1 style="font-size:clamp(30px,4vw,44px);margin:0 0 8px;letter-spacing:-0.02em;font-weight:800">Share your project</h1>
-      <p style="color:var(--muted);max-width:560px;margin:0 auto">Fill out the form below. Your submission will be reviewed by the admin panel before going live.</p>
-    </div>
-    <div class="glass form-card">
-      <form id="form">
-        <div class="form-grid">
-          <div class="field"><label>Project Title *</label><input name="title" required placeholder="Your project title" /></div>
-          <div class="field"><label>Category *</label>
-            <select name="category" required></select>
+    <span class="page-index" aria-hidden="true">07</span>
+    <div class="kicker">Submit</div>
+    <h1>Share your project</h1>
+    <p>Fill out the form below. Your submission will be reviewed by the admin panel before going live.</p>
+  </div>
+</section>
+
+<section style="padding:48px 0 80px">
+  <div class="container">
+    <div class="submit-layout">
+      <div class="glass form-card reveal">
+        <div id="authGateNotice" style="display:none;padding:16px 20px;border-radius:var(--radius);background:var(--surface-2);border-left:4px solid var(--accent);margin-bottom:20px;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:700;font-size:14px">Student Account Required</div>
+            <div style="color:var(--muted);font-size:12px;margin-top:2px">Please sign in to submit your project and track teacher reviews.</div>
           </div>
-          <div class="field"><label>Your Name *</label><input name="studentName" required placeholder="Full name" /></div>
-          <div class="field"><label>Grade / Class *</label><input name="grade" required placeholder="e.g. Grade 11" /></div>
-          <div class="field"><label>Email</label><input name="email" type="email" placeholder="you@school.edu" /></div>
-          <div class="field"><label>Image URL</label><input name="imageUrl" placeholder="https://..." /><div class="hint">Paste a hosted image link (Unsplash etc.)</div></div>
-          <div class="field full"><label>Description *</label><textarea name="description" required placeholder="Describe your project, what it does, and the impact..."></textarea></div>
-          <div class="field"><label>Live Demo URL</label><input name="demoUrl" placeholder="https://..." /></div>
-          <div class="field"><label>Repository URL</label><input name="repoUrl" placeholder="https://github.com/..." /></div>
-          <div class="field full"><label>Tags</label><input name="tags" placeholder="Comma separated, e.g. AI, Python, Web" /></div>
+          <a href="student-login.html?redirect=submit.html" class="btn btn-primary btn-sm">Sign In / Register →</a>
         </div>
-        <div style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end">
-          <a class="btn btn-ghost" href="projects.html">Cancel</a>
-          <button class="btn btn-primary" type="submit">Submit for Review</button>
+
+        <div id="authProfileBadge" style="display:none;padding:12px 16px;border-radius:var(--radius);background:var(--surface-2);border:1px solid var(--border);margin-bottom:20px;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--success)"></span>
+            <span style="font-size:13px">Verified Student: <strong id="loggedStudentLabel"></strong></span>
+          </div>
+          <a href="my-projects.html" class="btn btn-ghost btn-sm" style="font-size:12px">My Submissions</a>
         </div>
-      </form>
+
+        <form id="form" novalidate>
+          <div class="form-grid">
+            <div class="field"><label for="f-title">Project Title *</label><input id="f-title" name="title" required placeholder="Your project title" /><small class="field-error" aria-live="polite"></small></div>
+            <div class="field"><label for="f-category">Category *</label><select id="f-category" name="category" required></select><small class="field-error" aria-live="polite"></small></div>
+            <div class="field"><label for="f-name">Your Name *</label><input id="f-name" name="studentName" required placeholder="Full name" /><small class="field-error" aria-live="polite"></small></div>
+            <div class="field"><label for="f-grade">Grade / Class *</label><input id="f-grade" name="grade" required placeholder="e.g. Grade 11" /><small class="field-error" aria-live="polite"></small></div>
+            <div class="field"><label for="f-email">Email</label><input id="f-email" name="email" type="email" placeholder="you@school.edu" /><small class="field-error" aria-live="polite"></small></div>
+            <div class="field"><label for="f-image">Image URL</label><input id="f-image" name="imageUrl" placeholder="https://..." /><small class="hint">A hosted image link works best</small><small class="field-error" aria-live="polite"></small></div>
+            <div class="field full"><label for="f-description">Description *</label><textarea id="f-description" name="description" required placeholder="Describe your project, what it does, and the impact..."></textarea><small class="field-error" aria-live="polite"></small></div>
+            <div class="field"><label for="f-demo">Live Demo URL</label><input id="f-demo" name="demoUrl" placeholder="https://..." /><small class="field-error" aria-live="polite"></small></div>
+            <div class="field"><label for="f-repo">Repository URL</label><input id="f-repo" name="repoUrl" placeholder="https://github.com/..." /><small class="field-error" aria-live="polite"></small></div>
+            <div class="field full"><label for="f-tags">Tags</label><input id="f-tags" name="tags" placeholder="Comma separated, e.g. AI, Python, Web" /><small class="hint">Separate each tag with a comma</small></div>
+          </div>
+          <div class="submit-form-actions">
+            <span class="draft-note" id="draftNote">Your progress is saved automatically.</span>
+            <div style="display:flex;gap:12px">
+              <a class="btn btn-ghost" href="projects.html">Cancel</a>
+              <button class="btn btn-primary" type="submit">Submit for Review <span class="btn-arrow" aria-hidden="true">&#8594;</span></button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <aside class="submit-aside">
+        <div class="glass submit-preview-card">
+          <div class="kicker">Live preview</div>
+          <h2>This is how your exhibit will look</h2>
+          <div id="previewCard"></div>
+        </div>
+        <div class="glass submit-tips">
+          <h2>Before you submit</h2>
+          <ul>
+            <li>Write a clear title and describe the problem you solved.</li>
+            <li>Add a hosted image so your project stands out in the gallery.</li>
+            <li>Link a live demo or repository if you have one.</li>
+            <li>Submissions are reviewed before appearing publicly.</li>
+          </ul>
+        </div>
+      </aside>
     </div>
   </div>
 </section>
@@ -55,22 +100,194 @@
 <script>
   ExpoUI.renderNav(document.getElementById('nav'));
   ExpoUI.renderFooter(document.getElementById('footer'));
-  const S = window.ExpoStore;
-  const sel = document.querySelector('select[name=category]');
-  sel.innerHTML = S.CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
 
-  S.ready().then(() => document.getElementById('form').addEventListener('submit', e => {
+  const S = window.ExpoStore;
+  const esc = ExpoUI.escapeHTML;
+  const form = document.getElementById('form');
+  const previewCard = document.getElementById('previewCard');
+  const draftNote = document.getElementById('draftNote');
+  const DRAFT_KEY = 'expo_submit_draft';
+  const sel = form.elements.category;
+  sel.innerHTML = '<option value="">Select a category</option>' +
+    S.CATEGORIES.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+
+  function formData() {
+    return Object.fromEntries(new FormData(form).entries());
+  }
+
+  function setError(field, message) {
+    if (!field) return;
+    const slot = field.parentElement.querySelector('.field-error');
+    if (slot) slot.textContent = message || '';
+    field.classList.toggle('invalid', Boolean(message));
+    field.setAttribute('aria-invalid', message ? 'true' : 'false');
+  }
+
+  function renderPreview() {
+    const data = formData();
+    const title = data.title || 'Your project title';
+    const category = data.category || S.CATEGORIES[0];
+    const description = data.description || 'A short description of your project will appear here as you type.';
+    const isSvg = /\.svg(\?|$)/i.test(data.imageUrl || '');
+    const image = data.imageUrl
+      ? `<img class="${isSvg ? 'svg-art' : ''}" src="${esc(data.imageUrl)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">`
+      : '';
+    previewCard.innerHTML = `
+      <div class="preview-card-mini">
+        <div class="preview-thumb">
+          ${image}
+          <div class="preview-fallback" style="${image ? 'display:none' : ''}">${ExpoUI.categoryIcon(category)}</div>
+        </div>
+        <div class="preview-body">
+          <div class="project-cat">${esc(category)}</div>
+          <div class="project-title">${esc(title)}</div>
+          <div class="project-desc">${esc(description)}</div>
+        </div>
+      </div>`;
+  }
+
+  let saveTimer;
+  function saveDraft() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ data: formData(), at: Date.now() }));
+        draftNote.textContent = 'Draft saved at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        draftNote.classList.add('saved');
+      } catch (e) {
+        draftNote.textContent = 'Draft saving is unavailable in this browser.';
+      }
+    }, 350);
+  }
+
+  function restoreDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      Object.keys(draft.data || {}).forEach(key => {
+        const field = form.elements[key];
+        if (field) field.value = draft.data[key];
+      });
+      if (draft.at) {
+        draftNote.textContent = 'Draft restored from ' + new Date(draft.at).toLocaleString();
+        draftNote.classList.add('saved');
+      }
+    } catch (e) {}
+  }
+
+  function validate() {
+    let firstInvalid = null;
+    const required = [
+      ['title', 'Please enter a project title.'],
+      ['category', 'Please choose a category.'],
+      ['studentName', 'Please enter your name.'],
+      ['grade', 'Please enter your grade or class.'],
+      ['description', 'Please describe your project.']
+    ];
+    required.forEach(([name, message]) => {
+      const field = form.elements[name];
+      const empty = !String(field.value || '').trim();
+      setError(field, empty ? message : '');
+      if (empty && !firstInvalid) firstInvalid = field;
+    });
+
+    const email = form.elements.email;
+    if (email.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+      setError(email, 'Enter a valid email address or leave this blank.');
+      if (!firstInvalid) firstInvalid = email;
+    } else {
+      setError(email, '');
+    }
+
+    ['imageUrl', 'demoUrl', 'repoUrl'].forEach(name => {
+      const field = form.elements[name];
+      if (field.value && !/^https?:\/\//i.test(field.value) && !/^assets\//i.test(field.value)) {
+        setError(field, 'Use a full http:// or https:// link.');
+        if (!firstInvalid) firstInvalid = field;
+      }
+    });
+
+    if (firstInvalid) firstInvalid.focus();
+    return !firstInvalid;
+  }
+
+  form.addEventListener('input', e => {
+    if (e.target.name) setError(e.target, '');
+    renderPreview();
+    saveDraft();
+  });
+  form.addEventListener('change', e => {
+    if (e.target.name) setError(e.target, '');
+    renderPreview();
+    saveDraft();
+  });
+
+  form.addEventListener('submit', async e => {
     e.preventDefault();
-    const fd = new FormData(e.target);
-    const data = Object.fromEntries(fd.entries());
+    if (!validate()) {
+      ExpoUI.toast('Please fix the highlighted fields.', 'error');
+      return;
+    }
+
+    const button = form.querySelector('button[type="submit"]');
+    const original = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = 'Submitting...';
+
+    const data = formData();
     data.tags = (data.tags || '').split(',').map(t => t.trim()).filter(Boolean);
-    if (!data.demoUrl) data.demoUrl = '#';
-    if (!data.repoUrl) data.repoUrl = '#';
-    if (!data.imageUrl) data.imageUrl = '';
-    S.addProject(data);
-    ExpoUI.toast('Project submitted for review!', 'success');
-    setTimeout(() => location.href = 'projects.html', 900);
-  }));
+    data.demoUrl = data.demoUrl || '#';
+    data.repoUrl = data.repoUrl || '#';
+    data.imageUrl = data.imageUrl || '';
+
+    try {
+      await S.ready();
+      await S.addProject(data);
+      localStorage.removeItem(DRAFT_KEY);
+      ExpoUI.toast('Project submitted for review!', 'success');
+      setTimeout(() => { location.href = 'my-projects.html'; }, 900);
+    } catch (err) {
+      console.error('Submission failed:', err);
+      ExpoUI.toast('Submission failed. Please try again.', 'error');
+      button.disabled = false;
+      button.innerHTML = original;
+    }
+  });
+
+  const gateNotice = document.getElementById('authGateNotice');
+  const profileBadge = document.getElementById('authProfileBadge');
+  const loggedLabel = document.getElementById('loggedStudentLabel');
+
+  S.ready().then(() => {
+    const isStudent = S.isStudentLoggedIn();
+    const student = S.getStudentUser();
+
+    if (!isStudent || !student) {
+      gateNotice.style.display = 'flex';
+      profileBadge.style.display = 'none';
+    } else {
+      gateNotice.style.display = 'none';
+      profileBadge.style.display = 'flex';
+      loggedLabel.textContent = `${student.name} (${student.grade})`;
+
+      const nameField = form.elements.studentName;
+      const gradeField = form.elements.grade;
+      const emailField = form.elements.email;
+
+      nameField.value = student.name;
+      gradeField.value = student.grade;
+      if (student.email) emailField.value = student.email;
+
+      nameField.readOnly = true;
+      gradeField.readOnly = true;
+      if (student.email) emailField.readOnly = true;
+      renderPreview();
+    }
+  });
+
+  restoreDraft();
+  renderPreview();
 </script>
 </body>
 </html>

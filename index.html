@@ -4,16 +4,31 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Expo 2026 — School Exhibition</title>
+<meta name="description" content="Expo 2026 is our annual school exhibition — explore student projects in robotics, AI, design and more, and celebrate young innovation." />
+<meta property="og:title" content="Expo 2026 — School Exhibition" />
+<meta property="og:description" content="Where student ideas become real projects." />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#f4f1e9" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <link rel="icon" type="image/x-icon" href="favicon.ico" />
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
 <link rel="apple-touch-icon" href="school_logo.png" />
+<script>(function(){try{var t=localStorage.getItem('expo_theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.content=t==='dark'?'#171411':'#f4f1e9';}catch(e){document.documentElement.dataset.theme='light';}})()</script>
 <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 <nav class="nav"><div class="container" id="nav"></div></nav>
+
+<div class="launch-banner">
+  <div class="container">
+    <p>Submissions close in <span class="countdown" data-countdown="deadline"></span></p>
+    <p><strong data-campaign-count>0</strong> submissions received</p>
+    <p>Exhibition day in <span class="countdown" data-countdown="expo"></span></p>
+    <a href="submit.html">Submit now <span aria-hidden="true">&#8594;</span></a>
+  </div>
+</div>
 
 <section class="hero">
   <div class="container">
@@ -23,22 +38,29 @@
         <h1>Where student <span class="gradient-text">ideas</span> become real projects.</h1>
         <p>Explore, vote and celebrate the most innovative work from our students — from robotics and AI to art, games and everything in between.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary btn-lg" href="projects.html">Browse Projects</a>
-          <a class="btn btn-ghost btn-lg" href="submit.html">Submit Yours</a>
+          <a class="btn btn-primary btn-lg" href="projects.html">Browse Projects <span class="btn-arrow" aria-hidden="true">&#8594;</span></a>
+          <a class="btn btn-ghost btn-lg" href="submit.html">Submit Yours <span class="btn-arrow" aria-hidden="true">&#8594;</span></a>
         </div>
         <div class="hero-stats" id="heroStats"></div>
       </div>
       <div class="hero-visual">
-        <div class="hero-photo"><img src="gns front.jpg" alt="School campus" /></div>
+        <div class="hero-glow" aria-hidden="true"></div>
+        <span class="hero-edition" aria-hidden="true">Annual showcase &middot; Edition 2026</span>
+        <div class="hero-photo">
+          <picture>
+            <source type="image/webp" srcset="gns front-800.webp 800w, gns front-1600.webp 1600w" sizes="(max-width: 980px) 100vw, 45vw" />
+            <img src="gns front.jpg" srcset="gns front-800.jpg 800w, gns front-1600.jpg 1600w" sizes="(max-width: 980px) 100vw, 45vw" alt="School campus" />
+          </picture>
+        </div>
         <div class="hero-card hero-card-1 glass floating" id="heroCard1" style="--r:-6deg; animation-delay:0s; display:none">
-          <div style="aspect-ratio:16/9;border-radius:12px;overflow:hidden;margin-bottom:10px;background:var(--surface-2)">
+          <div style="aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;margin-bottom:10px;background:var(--surface-2)">
             <img id="heroCard1Img" style="width:100%;height:100%;object-fit:cover" alt="">
           </div>
           <div id="heroCard1Title" style="font-weight:700;font-size:14px"></div>
           <div id="heroCard1Meta" style="color:var(--muted);font-size:12px;margin-top:2px"></div>
         </div>
         <div class="hero-card hero-card-2 glass floating" id="heroCard2" style="--r:4deg; animation-delay:1.2s; display:none">
-          <div style="aspect-ratio:16/9;border-radius:12px;overflow:hidden;margin-bottom:10px;background:var(--surface-2)">
+          <div style="aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;margin-bottom:10px;background:var(--surface-2)">
             <img id="heroCard2Img" style="width:100%;height:100%;object-fit:cover" alt="">
           </div>
           <div id="heroCard2Title" style="font-weight:700;font-size:14px"></div>
@@ -51,6 +73,7 @@
           </div>
           <div style="margin-top:10px;font-weight:700">Next review in 2 days</div>
         </div>
+        <div class="hero-seal" aria-hidden="true"><span><strong>26</strong>Student<br/>Innovation</span></div>
       </div>
     </div>
   </div>
@@ -64,7 +87,7 @@
   <div class="container">
     <div class="section-head reveal">
       <div>
-        <div class="kicker">Featured</div>
+        <div class="kicker"><span class="idx">01 /</span> Featured</div>
         <h2>Spotlight projects</h2>
         <p>Hand-picked by our review panel for outstanding creativity and impact.</p>
       </div>
@@ -74,11 +97,25 @@
   </div>
 </section>
 
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="section-head reveal">
+      <div>
+        <div class="kicker"><span class="idx">02 /</span> Most loved</div>
+        <h2>Loved by the school</h2>
+        <p>Every visitor gets one vote per project. The most-loved exhibits will be celebrated on exhibition day.</p>
+      </div>
+      <a class="btn btn-ghost" href="projects.html?sort=loved">See the ranking</a>
+    </div>
+    <div class="grid-projects" id="leaderboardGrid"></div>
+  </div>
+</section>
+
 <section class="section" style="padding-top:0;border-top:none">
   <div class="container">
     <div class="section-head reveal">
       <div>
-        <div class="kicker">The process</div>
+        <div class="kicker"><span class="idx">02 /</span> The process</div>
         <h2>From idea to exhibit</h2>
         <p>Three clear steps take a student project from a first sketch to a live showcase.</p>
       </div>
@@ -107,7 +144,7 @@
   <div class="container">
     <div class="section-head reveal">
       <div>
-        <div class="kicker">Categories</div>
+        <div class="kicker"><span class="idx">03 /</span> Categories</div>
         <h2>Explore by domain</h2>
       </div>
     </div>
@@ -118,7 +155,7 @@
 <section class="scroll-lock" id="story">
   <div class="container">
     <div class="scroll-lock-sticky">
-      <div class="kicker">The journey</div>
+      <div class="kicker"><span class="idx">04 /</span> The journey</div>
       <div class="lock-lines">
         <div class="lock-line active" data-caption="Every great project begins with a question. Students imagine something that does not exist yet — then they set out to build it.">Imagine</div>
         <div class="lock-line" data-caption="Ideas become prototypes, prototypes become working systems. Iteration, testing and persistence turn a concept into something real.">Build</div>
@@ -135,7 +172,7 @@
   <div class="container">
     <div class="section-head reveal">
       <div>
-        <div class="kicker">Latest</div>
+        <div class="kicker"><span class="idx">05 /</span> Latest</div>
         <h2>Fresh submissions</h2>
         <p>The newest work arriving in the exhibition, straight from the review queue.</p>
       </div>
@@ -156,7 +193,7 @@
 
 <section class="section" style="padding-top:0">
   <div class="container">
-    <div class="glass stagger" style="padding:44px;display:flex;align-items:center;justify-content:space-between;gap:30px;flex-wrap:wrap">
+    <div class="glass glass-strong cta-panel stagger" style="padding:44px;display:flex;align-items:center;justify-content:space-between;gap:30px;flex-wrap:wrap">
       <div>
         <div class="kicker" style="margin-bottom:10px">Mark your calendar</div>
         <h2 style="font-size:clamp(30px,4vw,48px)">Exhibition day is December 12</h2>
@@ -169,7 +206,7 @@
 
 <section class="section" style="padding-top:0">
   <div class="container">
-    <div class="glass" style="padding:48px;text-align:center">
+    <div class="glass cta-panel" style="padding:48px;text-align:center">
       <h2 style="font-size:clamp(24px,3vw,36px);margin:0 0 10px">Ready to showcase your work?</h2>
       <p style="color:var(--muted);max-width:520px;margin:0 auto 24px">Submit your project for review. Approved projects go live on the exhibition gallery.</p>
       <a class="btn btn-primary btn-lg" href="submit.html">Submit a Project</a>
@@ -191,7 +228,19 @@
   S.ready().then(() => {
   renderHome(true);
   S.subscribeProjects(() => renderHome(false));
+  S.subscribeVotes(() => renderHome(false));
   });
+
+  const EMPTY_ART = `<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="28" y="24" width="60" height="46" rx="2"/><path d="M28 58l14-12 11 9 9-7 26 20"/><circle cx="70" cy="38" r="4"/><path d="M44 88h32M52 96h16" opacity=".45"/><path d="M94 26v16M86 34h16" opacity=".7"/></svg>`;
+  function emptyState(index, title, text, href, label) {
+    return `<div class="empty-state reveal">
+      <div class="empty-art">${EMPTY_ART}</div>
+      <div class="empty-index">${index}</div>
+      <h3>${title}</h3>
+      <p>${text}</p>
+      <a class="btn btn-primary" href="${href}">${label} <span class="btn-arrow" aria-hidden="true">&#8594;</span></a>
+    </div>`;
+  }
 
   function renderHome(initial) {
   const projects = S.getProjects();
@@ -215,17 +264,24 @@
   document.getElementById('heroStats').innerHTML = `
     <div class="stat"><div class="num">${statNum(projects.length)}</div><div class="label">Total Projects</div></div>
     <div class="stat"><div class="num">${statNum(approved.length)}</div><div class="label">Approved</div></div>
-    <div class="stat"><div class="num">${statNum(S.CATEGORIES.length)}</div><div class="label">Categories</div></div>`;
+    <div class="stat"><div class="num">${statNum(S.CATEGORIES.length)}</div><div class="label">Categories</div></div>
+    <div class="stat"><div class="num">${statNum(Object.values(S.getVoteSummary()).reduce((sum, n) => sum + n, 0))}</div><div class="label">Votes Cast</div></div>`;
 
   const featured = approved.filter(p => p.featured).slice(0,3);
   const fallback = approved.slice(0,3);
   const list = featured.length ? featured : fallback;
-  document.getElementById('featuredGrid').innerHTML = list.map(cardHTML).join('') || '<div class="empty"><p>No featured projects yet.</p></div>';
+  document.getElementById('featuredGrid').innerHTML = list.map((p, i) => cardHTML(p, i + 1)).join('') || emptyState('01 / Featured', 'The spotlight is waiting', 'No featured projects have been chosen yet. As the review panel approves and features outstanding work, it will appear here.', 'projects.html', 'Explore the gallery');
+
+  const ranked = approved.slice().sort((a, b) => S.getVoteCount(b.id) - S.getVoteCount(a.id) || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 3);
+  document.getElementById('leaderboardGrid').innerHTML = ranked.length
+    ? ranked.map((p, i) => ExpoUI.projectCardHTML(p, i + 1, { rank: i + 1 })).join('')
+    : emptyState('02 / Most loved', 'No votes yet', 'Once approved projects are live, visitors can vote for their favourites and the leaders will appear here.', 'projects.html', 'Browse projects');
 
   const catCounts = {};
   S.CATEGORIES.forEach(c => catCounts[c] = projects.filter(p => p.category === c).length);
   document.getElementById('catGrid').innerHTML = S.CATEGORIES.map(c => `
-    <a href="projects.html?cat=${encodeURIComponent(c)}" class="glass" style="padding:20px;display:block;transition:transform .2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+    <a href="projects.html?cat=${encodeURIComponent(c)}" class="glass cat-card" style="padding:20px;display:block">
+      <svg class="cat-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       <div class="category-icon">${catIcon(c)}</div>
       <div style="font-weight:700;font-size:15px">${c}</div>
       <div style="color:var(--muted);font-size:13px;margin-top:4px">${catCounts[c]} projects</div>
@@ -233,7 +289,7 @@
 
   const marqueeItems = [...S.CATEGORIES, ...S.CATEGORIES].map(c => `<span class="marquee-item">${c}</span>`).join('');
   document.getElementById('marqueeTrack').innerHTML = marqueeItems;
-  document.getElementById('latestGrid').innerHTML = projects.slice(0,3).map(cardHTML).join('') || '<div class="empty"><p>No submissions yet.</p></div>';
+  document.getElementById('latestGrid').innerHTML = projects.slice(0,3).map((p, i) => cardHTML(p, i + 1)).join('') || emptyState('05 / Latest', 'Fresh ideas land here', 'No submissions have arrived yet. The moment a student sends a project for review, it will appear in this space.', 'submit.html', 'Be the first to submit');
   setTimeout(() => ExpoUI.revealOnScroll(), initial ? 100 : 40);
   }
 
@@ -251,23 +307,8 @@
     };
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${paths[c] || paths.Other}</svg>`;
   }
-  function cardHTML(p) {
-    return `
-      <a href="project.html?id=${p.id}" class="project-card reveal">
-        <div class="project-thumb">
-          ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=img-fallback>No image</div>'">` : '<div class=img-fallback>No image</div>'}
-          <span class="badge status-${p.status}">${p.status}</span>
-        </div>
-        <div class="project-body">
-          <div class="project-cat">${p.category}</div>
-          <div class="project-title">${p.title}</div>
-          <div class="project-desc">${p.description}</div>
-          <div class="project-meta">
-            <div class="project-author"><span class="avatar">${S.initials(p.studentName)}</span>${p.studentName}</div>
-            <div style="color:var(--muted);font-size:12px">${p.grade}</div>
-          </div>
-        </div>
-      </a>`;
+  function cardHTML(p, i) {
+    return ExpoUI.projectCardHTML(p, i || 1);
   }
 </script>
 </body>

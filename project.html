@@ -4,12 +4,18 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Project — Expo 2026</title>
+<meta name="description" content="Explore a student project submitted to Expo 2026, the annual school exhibition for robotics, AI, science, art and design." />
+<meta property="og:title" content="Project — Expo 2026" />
+<meta property="og:description" content="A student project at Expo 2026." />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#f4f1e9" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <link rel="icon" type="image/x-icon" href="favicon.ico" />
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
 <link rel="apple-touch-icon" href="school_logo.png" />
+<script>(function(){try{var t=localStorage.getItem('expo_theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.content=t==='dark'?'#171411':'#f4f1e9';}catch(e){document.documentElement.dataset.theme='light';}})()</script>
 <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -26,26 +32,31 @@
   ExpoUI.renderNav(document.getElementById('nav'));
   ExpoUI.renderFooter(document.getElementById('footer'));
   const S = window.ExpoStore;
+  const EMPTY_ART = `<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="28" y="24" width="60" height="46" rx="2"/><path d="M28 58l14-12 11 9 9-7 26 20"/><circle cx="70" cy="38" r="4"/><path d="M44 88h32M52 96h16" opacity=".45"/><path d="M94 26v16M86 34h16" opacity=".7"/></svg>`;
   S.ready().then(() => {
   const id = new URLSearchParams(location.search).get('id');
   const p = S.getProjectById(id);
   const c = document.getElementById('content');
   if (!p) {
-    c.innerHTML = '<div class="empty"><p>Project not found.</p><a class="btn btn-ghost" href="projects.html" style="margin-top:16px">Back to projects</a></div>';
+    c.innerHTML = `<div class="empty-state reveal" style="margin-top:40px"><div class="empty-art">${EMPTY_ART}</div><div class="empty-index">404 / Missing</div><h3>This project has moved on</h3><p>We could not find that exhibit. It may have been removed or the link may be incomplete.</p><a class="btn btn-primary" href="projects.html">Back to the gallery <span class="btn-arrow" aria-hidden="true">&#8594;</span></a></div>`;
+    setTimeout(() => ExpoUI.revealOnScroll(), 40);
   } else {
+    document.title = `${p.title} — Expo 2026`;
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute('content', `${p.title} — Expo 2026`);
     c.innerHTML = `
       <div class="detail-hero">
-        <a href="projects.html" style="color:var(--muted);font-size:14px;display:inline-block;margin-bottom:24px">Back to projects</a>
+        <a href="projects.html${p.preview ? '?preview=1' : ''}" class="back-link" style="color:var(--muted);font-size:13px;font-weight:600;letter-spacing:.04em;margin-bottom:28px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Back to gallery</a>
         <div class="detail-grid">
           <div>
             <div class="detail-thumb">
-              ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.title}">` : '<div class=img-fallback>No image</div>'}
+              ${p.imageUrl ? `<img class="${/\.svg(\?|$)/i.test(p.imageUrl) ? 'svg-art' : ''}" src="${ExpoUI.escapeHTML(p.imageUrl)}" alt="${ExpoUI.escapeHTML(p.title)}">` : `<div class="img-fallback">${ExpoUI.categoryIcon(p.category)}</div>`}
             </div>
             <div style="margin-top:24px">
-              <div class="kicker">${p.category}</div>
-              <h1 class="detail-title">${p.title}</h1>
-              <div class="project-tags" style="margin:14px 0">${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
-              <p class="detail-body">${p.description}</p>
+              <div class="kicker">${ExpoUI.escapeHTML(p.category)}</div>
+              <h1 class="detail-title">${ExpoUI.escapeHTML(p.title)}</h1>
+              <div class="project-tags" style="margin:14px 0">${(p.tags || []).map(t => `<span class="tag">${ExpoUI.escapeHTML(t)}</span>`).join('')}</div>
+              <p class="detail-body">${ExpoUI.escapeHTML(p.description)}</p>
             </div>
           </div>
           <div class="detail-info glass" style="padding:28px;height:fit-content">
@@ -60,19 +71,25 @@
               </div>
             </div>
             <div class="detail-meta-row">
-              <div><div style="color:var(--muted);font-size:12px">Status</div><span class="status-pill ${p.status}">${p.status}</span></div>
+              <div><div style="color:var(--muted);font-size:12px">Status</div><span class="status-pill ${p.preview ? 'approved' : p.status}">${p.preview ? 'Sample' : p.status}</span></div>
               <div><div style="color:var(--muted);font-size:12px">Submitted</div><strong>${new Date(p.createdAt).toLocaleDateString()}</strong></div>
               ${p.reviewedAt ? `<div><div style="color:var(--muted);font-size:12px">Reviewed</div><strong>${new Date(p.reviewedAt).toLocaleDateString()}</strong></div>` : ''}
             </div>
             ${p.reviewNote ? `<div><div style="color:var(--muted);font-size:12px;margin-bottom:4px">Review note</div><div class="detail-note">${p.reviewNote}</div></div>` : ''}
             <div class="detail-actions">
-              ${p.demoUrl && p.demoUrl !== '#' ? `<a class="btn btn-primary" href="${p.demoUrl}" target="_blank">Live Demo</a>` : ''}
-              ${p.repoUrl && p.repoUrl !== '#' ? `<a class="btn btn-ghost" href="${p.repoUrl}" target="_blank">Repository</a>` : ''}
+              ${p.demoUrl && p.demoUrl !== '#' ? `<a class="btn btn-primary" href="${ExpoUI.escapeHTML(p.demoUrl)}" target="_blank" rel="noopener">Live Demo</a>` : ''}
+              ${p.repoUrl && p.repoUrl !== '#' ? `<a class="btn btn-ghost" href="${ExpoUI.escapeHTML(p.repoUrl)}" target="_blank" rel="noopener">Repository</a>` : ''}
             </div>
-            ${p.email ? `<div style="color:var(--muted);font-size:13px;border-top:1px solid var(--border);padding-top:16px">Contact: <span style="color:var(--text)">${p.email}</span></div>` : ''}
+            <div style="border-top:1px solid var(--border);padding-top:20px">
+              <div class="kicker" style="margin-bottom:12px">Show your support</div>
+              ${ExpoUI.voteButtonHTML(p.id, true)}
+              <div class="vote-hint" style="margin-top:9px">Sign in as a student to vote. Exactly 1 vote allowed per student account.</div>
+            </div>
+            ${p.email ? `<div style="color:var(--muted);font-size:13px;border-top:1px solid var(--border);padding-top:16px">Contact: <span style="color:var(--text)">${ExpoUI.escapeHTML(p.email)}</span></div>` : ''}
           </div>
         </div>
       </div>`;
+    setTimeout(() => ExpoUI.updateVoteButtons(), 0);
   }
   });
 </script>

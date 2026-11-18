@@ -41,6 +41,8 @@ const MIME_TYPES = {
   '.jpeg': 'image/jpeg',
   '.gif': 'image/gif',
   '.svg': 'image/svg+xml',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
   '.ico': 'image/x-icon',
   '.woff': 'font/woff',
   '.woff2': 'font/woff2'
@@ -51,8 +53,17 @@ const handlers = {
   '/api/auth/login': require('./api/auth/login'),
   '/api/auth/verify': require('./api/auth/verify'),
   '/api/auth/logout': require('./api/auth/logout'),
+  '/api/student/register': require('./api/student/register'),
+  '/api/student/login': require('./api/student/login'),
+  '/api/student/me': require('./api/student/me'),
+  '/api/student/logout': require('./api/student/logout'),
+  '/api/vote': require('./api/vote/index'),
+  '/api/votes': require('./api/vote/index'),
   '/api/projects': require('./api/projects/index'),
   '/api/activity': require('./api/activity/index'),
+  '/api/sitemap': require('./api/sitemap/index'),
+  '/sitemap.xml': require('./api/sitemap/index'),
+  '/robots.txt': require('./api/robots/index'),
   '/api/admin/reset': require('./api/admin/reset'),
   '/api/config': require('./api/config'),
   '/api/health': require('./api/health'),
@@ -62,15 +73,15 @@ const handlers = {
 const server = http.createServer(async (req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = parsedUrl.pathname.replace(/\/+$/, '') || '/';
+  req.query = Object.fromEntries(parsedUrl.searchParams.entries());
+
+  // Exact routes (including /sitemap.xml)
+  if (handlers[pathname]) {
+    return handlers[pathname](req, res);
+  }
 
   // Handle API routes
   if (pathname.startsWith('/api')) {
-    req.query = Object.fromEntries(parsedUrl.searchParams.entries());
-
-    if (handlers[pathname]) {
-      return handlers[pathname](req, res);
-    }
-
     // Check dynamic /api/projects/:id
     const projectMatch = pathname.match(/^\/api\/projects\/([^/]+)$/);
     if (projectMatch) {

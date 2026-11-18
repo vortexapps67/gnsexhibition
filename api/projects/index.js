@@ -1,4 +1,4 @@
-const { getAuthenticatedAdmin } = require('../_lib/auth');
+const { getAuthenticatedAdmin, getAuthenticatedStudent } = require('../_lib/auth');
 const { getProjects, addProject, CATEGORIES } = require('../_lib/db');
 const { parseJsonBody, sendJson, handleCors } = require('../_lib/helper');
 
@@ -39,15 +39,29 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // POST /api/projects
+  // POST /api/projects (Requires Student Login or Admin)
   if (req.method === 'POST') {
+    const student = getAuthenticatedStudent(req);
+    const admin = getAuthenticatedAdmin(req);
+
+    if (!student && !admin) {
+      return sendJson(res, 401, {
+        error: 'Authentication required. Please sign in as a student to submit a project.'
+      });
+    }
+
     try {
       const body = await parseJsonBody(req);
-      const { title, studentName, grade, email, category, description, imageUrl, demoUrl, repoUrl, tags } = body;
+      const { title, description, imageUrl, demoUrl, repoUrl, tags } = body;
+
+      const studentName = student ? student.name : (body.studentName || '').trim();
+      const grade = student ? student.grade : (body.grade || '').trim();
+      const email = student ? student.email : (body.email || '').trim();
+      const category = body.category;
 
       if (!title || !studentName || !grade || !description) {
         return sendJson(res, 400, {
-          error: 'Missing required fields: title, studentName, grade, and description are required.'
+          error: 'Missing required fields: title and description are required.'
         });
       }
 
@@ -64,7 +78,7 @@ module.exports = async function handler(req, res) {
         demoUrl: demoUrl || '#',
         repoUrl: repoUrl || '#',
         tags: tags || []
-      });
+      }, student);
 
       return sendJson(res, 201, {
         success: true,

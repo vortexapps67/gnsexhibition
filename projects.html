@@ -4,22 +4,29 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Projects — Expo 2026</title>
+<meta name="description" content="Browse every project submitted to Expo 2026. Filter by category and status, search by title or student, and discover student innovation." />
+<meta property="og:title" content="Projects — Expo 2026" />
+<meta property="og:description" content="Discover the work students are building for Expo 2026." />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#f4f1e9" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <link rel="icon" type="image/x-icon" href="favicon.ico" />
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
 <link rel="apple-touch-icon" href="school_logo.png" />
+<script>(function(){try{var t=localStorage.getItem('expo_theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.content=t==='dark'?'#171411':'#f4f1e9';}catch(e){document.documentElement.dataset.theme='light';}})()</script>
 <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 <nav class="nav"><div class="container" id="nav"></div></nav>
 
-<section style="padding:60px 0 20px">
+<section class="page-intro">
   <div class="container">
+    <span class="page-index" aria-hidden="true">02</span>
     <div class="kicker">Gallery</div>
-    <h1 style="font-size:clamp(32px,4vw,52px);margin:0 0 8px;letter-spacing:-0.02em;font-weight:800">All Projects</h1>
-    <p style="color:var(--muted);max-width:600px;margin:0">Browse every submission. Filter by category or status, search by title or student.</p>
+    <h1>All Projects</h1>
+    <p>Browse every submission. Filter by category or status, search by title or student.</p>
   </div>
 </section>
 
@@ -28,12 +35,13 @@
     <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px">
       <div class="filters" id="filters"></div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <div class="search-box"><span style="color:var(--muted-2)">⌕</span><input id="search" placeholder="Search projects..." /></div>
+        <div class="search-box"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" style="color:var(--muted-2);flex-shrink:0" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="search" placeholder="Search projects..." /></div>
         <select id="sort" class="sort-select" aria-label="Sort projects">
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
           <option value="az">Title A to Z</option>
           <option value="za">Title Z to A</option>
+          <option value="loved">Most loved</option>
         </select>
       </div>
     </div>
@@ -43,7 +51,7 @@
       <span id="syncBadge" class="sync-badge"></span>
     </div>
     <div class="grid-projects" id="grid"></div>
-    <div id="empty" class="empty" style="display:none"><p>No projects match your filters.</p></div>
+    <div id="empty" style="display:none"></div>
     <div class="load-more" id="loadMoreWrap" style="display:none"><button class="btn btn-ghost" id="loadMore">Load more</button></div>
   </div>
 </section>
@@ -61,19 +69,33 @@
   let activeCat = params.get('cat') || 'All';
   let activeStatus = params.get('status') || 'All';
   let query = '';
-  let sortBy = 'newest';
+  let sortBy = params.get('sort') || 'newest';
+  if (!['newest', 'oldest', 'az', 'za', 'loved'].includes(sortBy)) sortBy = 'newest';
+  document.getElementById('sort').value = sortBy;
   const PAGE_SIZE = 6;
   let visibleCount = PAGE_SIZE;
 
+  const EMPTY_ART = `<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="28" y="24" width="60" height="46" rx="2"/><path d="M28 58l14-12 11 9 9-7 26 20"/><circle cx="70" cy="38" r="4"/><path d="M44 88h32M52 96h16" opacity=".45"/><path d="M94 26v16M86 34h16" opacity=".7"/></svg>`;
+  function emptyState(index, title, text, href, label) {
+    return `<div class="empty-state reveal">
+      <div class="empty-art">${EMPTY_ART}</div>
+      <div class="empty-index">${index}</div>
+      <h2>${title}</h2>
+      <p>${text}</p>
+      <a class="btn btn-primary" href="${href}">${label} <span class="btn-arrow" aria-hidden="true">&#8594;</span></a>
+    </div>`;
+  }
+
   S.ready().then(() => {
   const badge = document.getElementById('syncBadge');
-  badge.textContent = S.backend === 'firebase' ? 'Live sync' : 'Local';
-  badge.classList.add(S.backend === 'firebase' ? 'live' : 'local');
-  badge.title = S.backend === 'firebase' ? 'Updates live from Firebase Realtime Database' : 'Firebase unavailable — using local storage';
+  const live = S.backend !== 'localStorage';
+  badge.textContent = live ? 'Live sync' : 'Local';
+  badge.classList.add(live ? 'live' : 'local');
+  badge.title = live ? 'The gallery updates automatically as projects are reviewed' : 'Backend unavailable — showing locally saved projects';
 
   const cats = ['All', ...S.CATEGORIES];
   document.getElementById('filters').innerHTML = cats.map(c => `<button class="filter-chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`).join('');
-  document.getElementById('statusFilter').innerHTML = ['All','Approved','Pending','Rejected'].map(s => `<button class="filter-chip ${s===activeStatus?'active':''}" data-status="${s}">${s}</button>`).join('');
+  document.getElementById('statusFilter').innerHTML = ['All','Approved','Pending','Rejected'].map(s => `<button class="filter-chip ${s===activeStatus?'active':''}" data-status="${s}">${s}</button>`).join('') + '<button class="filter-chip" id="clearFilters">Clear all</button>';
 
   document.getElementById('filters').addEventListener('click', e => {
     const b = e.target.closest('[data-cat]'); if(!b) return;
@@ -89,9 +111,30 @@
   });
   document.getElementById('search').addEventListener('input', e => { query = e.target.value.toLowerCase(); refresh(); });
   document.getElementById('sort').addEventListener('change', e => { sortBy = e.target.value; refresh(); });
+  document.getElementById('clearFilters').addEventListener('click', () => {
+    activeCat = 'All'; activeStatus = 'All'; query = ''; sortBy = 'newest';
+    document.getElementById('search').value = '';
+    document.getElementById('sort').value = 'newest';
+    document.querySelectorAll('#filters .filter-chip').forEach(x => x.classList.toggle('active', x.dataset.cat === 'All'));
+    document.querySelectorAll('#statusFilter [data-status]').forEach(x => x.classList.toggle('active', x.dataset.status === 'All'));
+    refresh();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      document.getElementById('search').focus();
+    }
+  });
   document.getElementById('loadMore').addEventListener('click', () => { visibleCount += PAGE_SIZE; render(); });
 
-  function refresh() { visibleCount = PAGE_SIZE; render(); }
+  function syncUrl() {
+    const url = new URL(location.href);
+    if (activeCat === 'All') url.searchParams.delete('cat'); else url.searchParams.set('cat', activeCat);
+    if (activeStatus === 'All') url.searchParams.delete('status'); else url.searchParams.set('status', activeStatus);
+    history.replaceState(null, '', url);
+  }
+
+  function refresh() { visibleCount = PAGE_SIZE; syncUrl(); render(); }
 
   function getFiltered() {
     let list = S.getProjects();
@@ -102,6 +145,7 @@
     else if (sortBy === 'oldest') list.sort((a,b) => (a.createdAt||0)-(b.createdAt||0));
     else if (sortBy === 'az') list.sort((a,b) => a.title.localeCompare(b.title));
     else if (sortBy === 'za') list.sort((a,b) => b.title.localeCompare(a.title));
+    else if (sortBy === 'loved') list.sort((a,b) => S.getVoteCount(b.id) - S.getVoteCount(a.id) || (b.createdAt || 0) - (a.createdAt || 0));
     return list;
   }
 
@@ -113,33 +157,29 @@
     const loadWrap = document.getElementById('loadMoreWrap');
     const shown = list.slice(0, visibleCount);
     count.textContent = list.length ? `Showing ${shown.length} of ${list.length} project${list.length === 1 ? '' : 's'}` : '';
-    if (!list.length) { grid.innerHTML = ''; empty.style.display = 'block'; loadWrap.style.display = 'none'; return; }
+    if (!list.length) {
+      grid.innerHTML = '';
+      const noProjects = S.getProjects().length === 0;
+      empty.innerHTML = noProjects
+        ? emptyState('00 / Gallery', 'The gallery is waiting', 'No projects have been submitted yet. Be the first to share an idea and help fill these walls.', 'submit.html', 'Submit a project')
+        : emptyState('00 / Gallery', 'Nothing matches that search', 'Try a different category, status or search term to find the work you are looking for.', 'projects.html', 'Clear filters');
+      empty.style.display = 'block';
+      loadWrap.style.display = 'none';
+      setTimeout(() => ExpoUI.revealOnScroll(), 40);
+      return;
+    }
     empty.style.display = 'none';
     grid.innerHTML = shown.map(cardHTML).join('');
     loadWrap.style.display = shown.length < list.length ? 'flex' : 'none';
     setTimeout(() => ExpoUI.revealOnScroll(), 50);
   }
-  function cardHTML(p) {
-    return `
-      <a href="project.html?id=${p.id}" class="project-card reveal">
-        <div class="project-thumb">
-          ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=img-fallback>No image</div>'">` : '<div class=img-fallback>No image</div>'}
-          <span class="badge status-${p.status}">${p.status}</span>
-        </div>
-        <div class="project-body">
-          <div class="project-cat">${p.category}</div>
-          <div class="project-title">${p.title}</div>
-          <div class="project-desc">${p.description}</div>
-          <div class="project-meta">
-            <div class="project-author"><span class="avatar">${S.initials(p.studentName)}</span>${p.studentName}</div>
-            <div style="color:var(--muted);font-size:12px">${p.grade}</div>
-          </div>
-        </div>
-      </a>`;
+  function cardHTML(p, i) {
+    return ExpoUI.projectCardHTML(p, i + 1);
   }
   render();
-  // Firebase pushes a new snapshot -> repaint the gallery without a reload.
+  // Live API pushes and vote changes repaint the gallery without a reload.
   S.subscribeProjects(render);
+  S.subscribeVotes(() => { if (sortBy === 'loved') render(); });
   });
 </script>
 </body>
