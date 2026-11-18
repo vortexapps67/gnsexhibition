@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Success — Expo 2026</title>
+<meta name="theme-color" content="#f4f1e9" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link rel="icon" type="image/x-icon" href="favicon.ico" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
+<link rel="apple-touch-icon" href="school_logo.png" />
+<script>(function(){try{var t=localStorage.getItem('expo_theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.content=t==='dark'?'#171411':'#f4f1e9';}catch(e){document.documentElement.dataset.theme='light';}})()</script>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<nav class="nav"><div class="container" id="nav"></div></nav>
+<main class="container" style="min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px">
+  <div class="kicker" style="justify-content:center">Success</div>
+  <h1 style="font-family:'DM Serif Display',serif;font-size:clamp(40px,8vw,88px);line-height:.95;margin:12px 0;color:var(--success)">Action completed</h1>
+  <p style="color:var(--muted);max-width:460px;margin:12px auto 28px">Your request was processed successfully. You can continue exploring the exhibition.</p>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+    <a class="btn btn-primary btn-lg" href="index.html">Back to home</a>
+    <a class="btn btn-ghost btn-lg" href="projects.html">View projects</a>
+  </div>
+</main>
+<footer class="footer" id="footer"></footer>
+<script src="js/store.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+  ExpoUI.renderNav(document.getElementById('nav'));
+  ExpoUI.renderFooter(document.getElementById('footer'));
+  if (window.ExpoUI && ExpoUI.confetti) ExpoUI.confetti();
+</script>
+</body>
+</html>

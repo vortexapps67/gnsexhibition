@@ -71,13 +71,21 @@ const server = http.createServer(async (req, res) => {
         if (fs.existsSync(withHtml)) {
           filePath = withHtml;
         } else {
+          const notFoundPath = path.join(__dirname, '404.html');
           res.statusCode = 404;
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          if (fs.existsSync(notFoundPath)) {
+            return fs.readFile(notFoundPath, (e, content) => { res.end(e ? '<h1>404 Not Found</h1>' : content); });
+          }
           return res.end('<h1>404 Not Found</h1><p>The requested file does not exist.</p>');
         }
       } else {
+        const notFoundPath = path.join(__dirname, '404.html');
         res.statusCode = 404;
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        if (fs.existsSync(notFoundPath)) {
+          return fs.readFile(notFoundPath, (e, content) => { res.end(e ? '<h1>404 Not Found</h1>' : content); });
+        }
         return res.end('<h1>404 Not Found</h1>');
       }
     } else if (stats.isDirectory()) {

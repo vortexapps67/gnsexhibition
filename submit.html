@@ -250,7 +250,7 @@
       await S.addProject(data);
       localStorage.removeItem(DRAFT_KEY);
       ExpoUI.toast('Project submitted for review!', 'success');
-      setTimeout(() => { location.href = 'profile.html'; }, 900);
+      setTimeout(() => { location.href = 'thank-you.html'; }, 900);
     } catch (err) {
       console.error('Submission failed:', err);
       ExpoUI.toast('Submission failed. Please try again.', 'error');
