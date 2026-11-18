@@ -2,6 +2,14 @@ const { findOrCreateGoogleStudent, logActivity } = require('../_lib/db');
 const { signStudentToken, signToken } = require('../_lib/auth');
 const { parseJsonBody, sendJson, handleCors } = require('../_lib/helper');
 
+function sanitizeRedirect(target) {
+  if (!target || typeof target !== 'string') return '/my-projects.html';
+  let t = target.trim();
+  if (!t.startsWith('/')) t = '/' + t;
+  if (t.startsWith('//') || t.startsWith('/api/')) return '/my-projects.html';
+  return t;
+}
+
 function getGoogleClientId() {
   return process.env.GOOGLE_CLIENT_ID || '';
 }
@@ -28,7 +36,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'GET') {
     const url = new URL(req.url, baseUrl);
     const code = url.searchParams.get('code');
-    const state = url.searchParams.get('state') || '/my-projects.html';
+    const state = sanitizeRedirect(url.searchParams.get('state'));
     const error = url.searchParams.get('error');
 
     // If OAuth error returned by Google
@@ -110,7 +118,7 @@ module.exports = async function handler(req, res) {
       res.setHeader('Location', `/student-login.html?error=${encodeURIComponent('Google OAuth is not configured on the server. Please set GOOGLE_CLIENT_ID.')}`);
       return res.end();
     }
-    const targetState = url.searchParams.get('redirect') || '/my-projects.html';
+    const targetState = sanitizeRedirect(url.searchParams.get('redirect'));
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,

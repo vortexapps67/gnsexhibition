@@ -195,7 +195,8 @@
 <script src="js/app.js"></script>
 <script>
   const S = window.ExpoStore;
-  const redirect = new URLSearchParams(location.search).get('redirect') || 'projects.html';
+  const rawRedirect = new URLSearchParams(location.search).get('redirect') || '/projects.html';
+  const redirect = rawRedirect.startsWith('/') ? rawRedirect : '/' + rawRedirect;
   const urlError = new URLSearchParams(location.search).get('error');
 
   const tabLogin = document.getElementById('tabLogin');
