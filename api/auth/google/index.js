@@ -1,6 +1,6 @@
-const { findOrCreateGoogleStudent, logActivity } = require('../_lib/db');
-const { signStudentToken, signToken } = require('../_lib/auth');
-const { parseJsonBody, sendJson, handleCors } = require('../_lib/helper');
+const { findOrCreateGoogleStudent, logActivity } = require('../../_lib/db');
+const { signStudentToken, signToken } = require('../../_lib/auth');
+const { parseJsonBody, sendJson, handleCors } = require('../../_lib/helper');
 
 function getGoogleClientId() {
   return process.env.GOOGLE_CLIENT_ID || '';
