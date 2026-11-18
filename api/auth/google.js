@@ -3,7 +3,7 @@ const { signStudentToken, signToken } = require('../_lib/auth');
 const { parseJsonBody, sendJson, handleCors } = require('../_lib/helper');
 
 function getGoogleClientId() {
-  return process.env.GOOGLE_CLIENT_ID || '179200222340-vsv7qsqr1g49ns3nhgt0kuhshtt4es5t.apps.googleusercontent.com';
+  return process.env.GOOGLE_CLIENT_ID || '';
 }
 
 function getGoogleClientSecret() {
@@ -105,6 +105,11 @@ module.exports = async function handler(req, res) {
     }
 
     // Initiate Google OAuth redirect
+    if (!clientId) {
+      res.statusCode = 302;
+      res.setHeader('Location', `/student-login.html?error=${encodeURIComponent('Google OAuth is not configured on the server. Please set GOOGLE_CLIENT_ID.')}`);
+      return res.end();
+    }
     const targetState = url.searchParams.get('redirect') || '/my-projects.html';
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + new URLSearchParams({
       client_id: clientId,
