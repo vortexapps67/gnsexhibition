@@ -17,6 +17,9 @@ const handlers = {
   '/api/projects': require('./_routes/projects'),
   '/api/activity': require('./_routes/activity'),
   '/api/admin/reset': require('./_routes/admin_reset'),
+  '/api/admin/users': require('./_routes/admin_users'),
+  '/api/admin/settings': require('./_routes/admin_settings'),
+  '/api/admin/students': require('./_routes/students_admin'),
   '/api/config': require('./_routes/config'),
   '/api/health': require('./_routes/health'),
 };
@@ -45,6 +48,13 @@ module.exports = async function handler(req, res) {
   if (projectMatch) {
     req.query.id = decodeURIComponent(projectMatch[1]);
     return projectItemHandler(req, res);
+  }
+
+  // Dynamic /api/admin/users/:id route
+  const adminUserMatch = pathname.match(/^\/api\/admin\/users\/([^/]+)$/);
+  if (adminUserMatch) {
+    req.query.id = decodeURIComponent(adminUserMatch[1]);
+    return require('./_routes/admin_user_item')(req, res);
   }
 
   // Root /api endpoint

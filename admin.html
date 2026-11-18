@@ -139,6 +139,25 @@
             <span class="nav-count" id="countFeatured">0</span>
           </a>
           <div style="height:1px;background:var(--border);margin:12px 0"></div>
+          <a href="#" data-view="schedule">
+            <span class="nav-label">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              Exhibition Schedule
+            </span>
+          </a>
+          <a href="#" data-view="adminUsers">
+            <span class="nav-label">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              Admin Users
+            </span>
+          </a>
+          <a href="#" data-view="studentAccounts">
+            <span class="nav-label">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              Student Accounts
+            </span>
+          </a>
+          <div style="height:1px;background:var(--border);margin:12px 0"></div>
           <a href="index.html" target="_blank">
             <span class="nav-label">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
@@ -295,6 +314,56 @@
           </table>
         </div>
       </div>
+
+      <!-- SCHEDULE VIEW -->
+      <div id="scheduleView" style="display:none">
+        <div class="admin-header">
+          <div>
+            <h1>Exhibition Schedule</h1>
+            <div id="viewSub">Edit exhibition dates, times and milestones</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-primary btn-sm" id="saveScheduleBtn">Save Schedule</button>
+            <button class="btn btn-ghost btn-sm" id="resetScheduleBtn">Reset Defaults</button>
+          </div>
+        </div>
+        <div class="glass" style="padding:20px">
+          <div id="scheduleEditor"></div>
+        </div>
+      </div>
+
+      <!-- ADMIN USERS VIEW -->
+      <div id="adminUsersView" style="display:none">
+        <div class="admin-header">
+          <div>
+            <h1>Admin Users</h1>
+            <div id="viewSub">Manage administrator accounts and credentials</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-primary btn-sm" id="addAdminUserBtn">Add Admin User</button>
+          </div>
+        </div>
+        <div class="glass" style="padding:20px">
+          <div id="adminUsersList"></div>
+        </div>
+      </div>
+
+      <!-- STUDENT ACCOUNTS VIEW -->
+      <div id="studentAccountsView" style="display:none">
+        <div class="admin-header">
+          <div>
+            <h1>Student Accounts</h1>
+            <div id="viewSub">View and manage registered student accounts</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <input id="studentSearch" placeholder="Search students..." style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit" />
+          </div>
+        </div>
+        <div class="glass" style="padding:20px">
+          <div id="studentAccountsList"></div>
+        </div>
+      </div>
+
     </main>
   </div>
 </div>
@@ -721,6 +790,12 @@
       S.subscribeActivity(() => { if (dashVisible() && currentView === 'overview') renderActivity(); });
     }
 
+    // Schedule editor handlers
+    $('#saveScheduleBtn').addEventListener('click', saveSchedule);
+    $('#resetScheduleBtn').addEventListener('click', resetSchedule);
+    $('#addAdminUserBtn').addEventListener('click', addAdminUserPrompt);
+    $('#studentSearch').addEventListener('input', (e) => { studentSearchQuery = e.target.value.toLowerCase(); renderStudentAccounts(); });
+
     switchView('overview');
   }
 
@@ -760,7 +835,10 @@
       pending: ['Pending Review', 'Submissions awaiting faculty evaluation'],
       approved: ['Approved Projects', 'Projects actively showcased on the public gallery'],
       rejected: ['Rejected Projects', 'Submissions requiring revisions from students'],
-      featured: ['Featured Projects', 'Showcased projects highlighted on the homepage']
+      featured: ['Featured Projects', 'Showcased projects highlighted on the homepage'],
+      schedule: ['Exhibition Schedule', 'Edit exhibition dates, times and milestones'],
+      adminUsers: ['Admin Users', 'Manage administrator accounts and credentials'],
+      studentAccounts: ['Student Accounts', 'View and manage registered student accounts']
     };
 
     const titleInfo = titles[v] || ['Admin View', 'Manage exhibition data'];
@@ -768,12 +846,21 @@
     $('#viewSub').textContent = titleInfo[1];
 
     $('#overviewView').style.display = v === 'overview' ? 'block' : 'none';
-    $('#projectsView').style.display = v === 'overview' ? 'none' : 'block';
+    $('#projectsView').style.display = (v !== 'overview' && v !== 'schedule' && v !== 'adminUsers' && v !== 'studentAccounts') ? 'block' : 'none';
+    const scheduleView = $('#scheduleView'); if (scheduleView) scheduleView.style.display = v === 'schedule' ? 'block' : 'none';
+    const adminUsersView = $('#adminUsersView'); if (adminUsersView) adminUsersView.style.display = v === 'adminUsers' ? 'block' : 'none';
+    const studentAccountsView = $('#studentAccountsView'); if (studentAccountsView) studentAccountsView.style.display = v === 'studentAccounts' ? 'block' : 'none';
 
     updateCounts();
 
     if (v === 'overview') {
       renderOverview();
+    } else if (v === 'schedule') {
+      renderScheduleEditor();
+    } else if (v === 'adminUsers') {
+      renderAdminUsers();
+    } else if (v === 'studentAccounts') {
+      renderStudentAccounts();
     } else {
       filterOnlyFeatured = (v === 'featured');
       $('#filterFeaturedBtn').classList.toggle('active', filterOnlyFeatured);
@@ -996,6 +1083,241 @@
           </div>
         </td>
       </tr>`;
+  }
+
+  let studentSearchQuery = '';
+
+  // ===== SCHEDULE EDITOR =====
+  async function renderScheduleEditor() {
+    const settings = await S.getSettings ? await S.getSettings() : null;
+    // fallback: fetch directly
+    let data = settings;
+    if (!data) {
+      try { const r = await fetch('/api/admin/settings', { headers: { 'Authorization': 'Bearer ' + sessionStorage.getItem('expo_admin_token') } }); data = (await r.json()).settings; } catch (e) {}
+    }
+    const schedule = (data && data.schedule) ? data.schedule : [];
+    const container = $('#scheduleEditor');
+    container.innerHTML = schedule.map((s, i) => `
+      <div style="display:grid;grid-template-columns:1fr 1fr 2fr 2fr auto;gap:10px;align-items:center;margin-bottom:10px;padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2)">
+        <input data-idx="${i}" data-field="date" type="date" value="${escapeHTML(s.date || '')}" style="padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit" />
+        <input data-idx="${i}" data-field="time" type="time" value="${escapeHTML(s.time || '')}" style="padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit" />
+        <input data-idx="${i}" data-field="label" type="text" value="${escapeHTML(s.label || '')}" placeholder="Label" style="padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit" />
+        <input data-idx="${i}" data-field="note" type="text" value="${escapeHTML(s.note || '')}" placeholder="Note" style="padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit" />
+        <button class="btn btn-danger btn-sm" data-action="remove-schedule" data-idx="${i}">Remove</button>
+      </div>
+    `).join('') + '<button class="btn btn-ghost btn-sm" id="addScheduleRowBtn" style="margin-top:8px">+ Add Milestone</button>';
+
+    container.querySelectorAll('[data-action="remove-schedule"]').forEach(b => {
+      b.addEventListener('click', () => {
+        const idx = parseInt(b.dataset.idx);
+        schedule.splice(idx, 1);
+        // re-render by saving to temp? Instead re-render from updated array stored in container dataset
+        renderScheduleEditorFromArray(schedule);
+      });
+    });
+    const addBtn = $('#addScheduleRowBtn');
+    if (addBtn) addBtn.addEventListener('click', () => {
+      schedule.push({ id: 's' + Date.now(), date: '', time: '', label: '', note: '' });
+      renderScheduleEditorFromArray(schedule);
+    });
+    // store current schedule in a global for save
+    window._currentSchedule = schedule;
+  }
+
+  function renderScheduleEditorFromArray(schedule) {
+    const container = $('#scheduleEditor');
+    container.innerHTML = schedule.map((s, i) => `
+      <div style="display:grid;grid-template-columns:1fr 1fr 2fr 2fr auto;gap:10px;align-items:center;margin-bottom:10px;padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2)">
+        <input data-idx="${i}" data-field="date" type="date" value="${escapeHTML(s.date || '')}" style="padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit" />
+        <input data-idx="${i}" data-field="time" type="time" value="${escapeHTML(s.time || '')}" style="padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit" />
+        <input data-idx="${i}" data-field="label" type="text" value="${escapeHTML(s.label || '')}" placeholder="Label" style="padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit" />
+        <input data-idx="${i}" data-field="note" type="text" value="${escapeHTML(s.note || '')}" placeholder="Note" style="padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit" />
+        <button class="btn btn-danger btn-sm" data-action="remove-schedule" data-idx="${i}">Remove</button>
+      </div>
+    `).join('') + '<button class="btn btn-ghost btn-sm" id="addScheduleRowBtn" style="margin-top:8px">+ Add Milestone</button>';
+
+    container.querySelectorAll('[data-action="remove-schedule"]').forEach(b => {
+      b.addEventListener('click', () => {
+        const idx = parseInt(b.dataset.idx);
+        schedule.splice(idx, 1);
+        renderScheduleEditorFromArray(schedule);
+      });
+    });
+    const addBtn = $('#addScheduleRowBtn');
+    if (addBtn) addBtn.addEventListener('click', () => {
+      schedule.push({ id: 's' + Date.now(), date: '', time: '', label: '', note: '' });
+      renderScheduleEditorFromArray(schedule);
+    });
+    window._currentSchedule = schedule;
+  }
+
+  async function saveSchedule() {
+    // collect from DOM
+    const container = $('#scheduleEditor');
+    const rows = container.querySelectorAll('input[data-idx]');
+    const map = {};
+    rows.forEach(inp => {
+      const idx = inp.dataset.idx;
+      const field = inp.dataset.field;
+      if (!map[idx]) map[idx] = { id: 's' + idx };
+      map[idx][field] = inp.value;
+    });
+    const schedule = Object.keys(map).sort((a,b)=>a-b).map(k => map[k]);
+    // preserve ids from window._currentSchedule if possible
+    if (window._currentSchedule && window._currentSchedule.length === schedule.length) {
+      schedule.forEach((s, i) => { if (window._currentSchedule[i] && window._currentSchedule[i].id) s.id = window._currentSchedule[i].id; });
+    }
+    try {
+      const res = await fetch('/api/admin/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sessionStorage.getItem('expo_admin_token') }, body: JSON.stringify({ schedule }) });
+      const data = await res.json();
+      if (data.success) { ExpoUI.toast('Schedule saved', 'success'); window._currentSchedule = data.settings.schedule; }
+      else ExpoUI.toast(data.error || 'Failed to save', 'error');
+    } catch (e) { ExpoUI.toast('Save failed', 'error'); }
+  }
+
+  async function resetSchedule() {
+    if (!confirm('Reset schedule to defaults?')) return;
+    const defaults = [
+      { id: 's1', date: '2026-11-12', time: '', label: 'Submissions open', note: 'Students can start submitting projects.' },
+      { id: 's2', date: '2026-11-30', time: '23:59', label: 'Submission deadline', note: 'Last day to submit projects.' },
+      { id: 's3', date: '2026-12-01', time: '', label: 'Panel review begins', note: 'Faculty review period starts.' },
+      { id: 's4', date: '2026-12-05', time: '', label: 'Review complete', note: 'All projects reviewed.' },
+      { id: 's5', date: '2026-12-08', time: '', label: 'Revision window', note: 'Students address feedback.' },
+      { id: 's6', date: '2026-12-12', time: '09:00', label: 'Exhibition day', note: 'Doors open to visitors.' },
+      { id: 's7', date: '2026-12-12', time: '17:00', label: 'Awards ceremony', note: 'Best Innovation, Best Design, Best Social Impact, People\'s Choice.' }
+    ];
+    try {
+      const res = await fetch('/api/admin/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sessionStorage.getItem('expo_admin_token') }, body: JSON.stringify({ schedule: defaults }) });
+      const data = await res.json();
+      if (data.success) { ExpoUI.toast('Schedule reset', 'success'); renderScheduleEditor(); }
+    } catch (e) { ExpoUI.toast('Reset failed', 'error'); }
+  }
+
+  // ===== ADMIN USERS =====
+  async function renderAdminUsers() {
+    const container = $('#adminUsersList');
+    container.innerHTML = '<div style="color:var(--muted)">Loading...</div>';
+    try {
+      const res = await fetch('/api/admin/users', { headers: { 'Authorization': 'Bearer ' + sessionStorage.getItem('expo_admin_token') } });
+      const data = await res.json();
+      if (!data.success) { container.innerHTML = '<div style="color:var(--danger)">Failed to load</div>'; return; }
+      const users = data.users || [];
+      container.innerHTML = `
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="text-align:left;border-bottom:1px solid var(--border)">
+            <th style="padding:8px">Username</th><th style="padding:8px">Role</th><th style="padding:8px">Created</th><th style="padding:8px;text-align:right">Actions</th>
+          </tr></thead>
+          <tbody>
+            ${users.map(u => `
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:8px;font-weight:600">${escapeHTML(u.username)}</td>
+                <td style="padding:8px">${escapeHTML(u.role || 'admin')}</td>
+                <td style="padding:8px;font-size:12px;color:var(--muted)">${new Date(u.createdAt || Date.now()).toLocaleDateString()}</td>
+                <td style="padding:8px;text-align:right">
+                  <button class="btn btn-ghost btn-sm" data-action="edit-admin" data-id="${u.id}" data-username="${escapeHTML(u.username)}">Edit</button>
+                  <button class="btn btn-danger btn-sm" data-action="delete-admin" data-id="${u.id}" data-username="${escapeHTML(u.username)}">Delete</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      container.querySelectorAll('[data-action="edit-admin"]').forEach(b => {
+        b.addEventListener('click', () => editAdminUser(b.dataset.id, b.dataset.username));
+      });
+      container.querySelectorAll('[data-action="delete-admin"]').forEach(b => {
+        b.addEventListener('click', () => deleteAdminUserPrompt(b.dataset.id, b.dataset.username));
+      });
+    } catch (e) {
+      container.innerHTML = '<div style="color:var(--danger)">Error loading admin users</div>';
+    }
+  }
+
+  async function addAdminUserPrompt() {
+    const username = prompt('New admin username:');
+    if (!username) return;
+    const password = prompt('Password (min 6 chars):');
+    if (!password) return;
+    try {
+      const res = await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sessionStorage.getItem('expo_admin_token') }, body: JSON.stringify({ username, password }) });
+      const data = await res.json();
+      if (data.success) { ExpoUI.toast('Admin user created', 'success'); renderAdminUsers(); }
+      else ExpoUI.toast(data.error || 'Failed', 'error');
+    } catch (e) { ExpoUI.toast('Failed', 'error'); }
+  }
+
+  async function editAdminUser(id, username) {
+    const newUsername = prompt('New username (leave blank to keep):', username);
+    const newPassword = prompt('New password (leave blank to keep):');
+    const body = {};
+    if (newUsername && newUsername.trim() && newUsername.trim() !== username) body.username = newUsername.trim();
+    if (newPassword && newPassword.trim()) body.password = newPassword.trim();
+    if (Object.keys(body).length === 0) return;
+    try {
+      const res = await fetch('/api/admin/users/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sessionStorage.getItem('expo_admin_token') }, body: JSON.stringify(body) });
+      const data = await res.json();
+      if (data.success) { ExpoUI.toast('Admin user updated', 'success'); renderAdminUsers(); }
+      else ExpoUI.toast(data.error || 'Failed', 'error');
+    } catch (e) { ExpoUI.toast('Failed', 'error'); }
+  }
+
+  async function deleteAdminUserPrompt(id, username) {
+    if (!confirm('Delete admin user "' + username + '"?')) return;
+    try {
+      const res = await fetch('/api/admin/users/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + sessionStorage.getItem('expo_admin_token') } });
+      const data = await res.json();
+      if (data.success) { ExpoUI.toast('Admin user deleted', 'success'); renderAdminUsers(); }
+      else ExpoUI.toast(data.error || 'Failed', 'error');
+    } catch (e) { ExpoUI.toast('Failed', 'error'); }
+  }
+
+  // ===== STUDENT ACCOUNTS =====
+  async function renderStudentAccounts() {
+    const container = $('#studentAccountsList');
+    container.innerHTML = '<div style="color:var(--muted)">Loading...</div>';
+    try {
+      const res = await fetch('/api/admin/students', { headers: { 'Authorization': 'Bearer ' + sessionStorage.getItem('expo_admin_token') } });
+      const data = await res.json();
+      if (!data.success) { container.innerHTML = '<div style="color:var(--danger)">Failed to load</div>'; return; }
+      let students = data.students || [];
+      if (studentSearchQuery) {
+        students = students.filter(s => ((s.name||'') + ' ' + (s.email||'') + ' ' + (s.studentCode||'') + ' ' + (s.grade||'')).toLowerCase().includes(studentSearchQuery));
+      }
+      container.innerHTML = `
+        <div style="margin-bottom:10px;color:var(--muted);font-size:13px">${students.length} student(s)</div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="text-align:left;border-bottom:1px solid var(--border)">
+            <th style="padding:8px">Name</th><th style="padding:8px">Student Code</th><th style="padding:8px">Email</th><th style="padding:8px">Grade</th><th style="padding:8px;text-align:right">Actions</th>
+          </tr></thead>
+          <tbody>
+            ${students.map(s => `
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:8px;font-weight:600">${escapeHTML(s.name)}</td>
+                <td style="padding:8px;font-family:monospace;font-size:12px">${escapeHTML(s.studentCode || s.id)}</td>
+                <td style="padding:8px;font-size:13px">${escapeHTML(s.email)}</td>
+                <td style="padding:8px">${escapeHTML(s.grade)}</td>
+                <td style="padding:8px;text-align:right">
+                  <button class="btn btn-danger btn-sm" data-action="delete-student" data-id="${s.id}">Delete</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      container.querySelectorAll('[data-action="delete-student"]').forEach(b => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Delete this student account?')) return;
+          try {
+            const r = await fetch('/api/admin/students', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sessionStorage.getItem('expo_admin_token') }, body: JSON.stringify({ id: b.dataset.id }) });
+            const d = await r.json();
+            if (d.success) { ExpoUI.toast('Student deleted', 'success'); renderStudentAccounts(); }
+            else ExpoUI.toast(d.error || 'Failed', 'error');
+          } catch (e) { ExpoUI.toast('Failed', 'error'); }
+        });
+      });
+    } catch (e) {
+      container.innerHTML = '<div style="color:var(--danger)">Error loading students</div>';
+    }
   }
 
   // Handle Action Trigger

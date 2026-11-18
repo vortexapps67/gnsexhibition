@@ -398,6 +398,7 @@
             <a href="admin.html">Admin Panel</a>
             <a href="submit.html">Submit Project</a>
             <a href="faq.html">Help & FAQ</a>
+            <a href="privacy.html">Privacy Policy</a>
           </div>
         </div>
         <div class="footer-wordmark" aria-hidden="true">Expo<span>2026</span></div>

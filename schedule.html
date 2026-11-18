@@ -33,56 +33,7 @@
 <section class="section" style="padding-top:20px">
   <div class="container">
     <h2 class="sr-only">Key dates</h2>
-    <div class="timeline stagger">
-      <div class="timeline-item">
-        <div class="timeline-date">Nov 12<span>Opening</span></div>
-        <div class="timeline-body">
-          <h3>Submissions open</h3>
-          <p>The submission form goes live. Students can create their entry, upload an image and add links to a demo or repository.</p>
-        </div>
-        <div class="timeline-tag">All students</div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-date">Nov 30<span>Deadline</span></div>
-        <div class="timeline-body">
-          <h3>Submission deadline</h3>
-          <p>All project details must be submitted by 11:59 PM. Entries received after this point are not included in the first review round.</p>
-        </div>
-        <div class="timeline-tag">11:59 PM</div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-date">Dec 01–05<span>Review</span></div>
-        <div class="timeline-body">
-          <h3>Panel review</h3>
-          <p>The review panel checks every submission against the criteria, leaves notes and approves or rejects each project.</p>
-        </div>
-        <div class="timeline-tag">Admin panel</div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-date">Dec 08<span>Feedback</span></div>
-        <div class="timeline-body">
-          <h3>Revision window</h3>
-          <p>Students whose projects need changes receive reviewer feedback and can update their submissions before final approval.</p>
-        </div>
-        <div class="timeline-tag">Optional</div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-date">Dec 12<span>Exhibition</span></div>
-        <div class="timeline-body">
-          <h3>Exhibition day</h3>
-          <p>Doors open at 9 AM. Explore the gallery, watch live demonstrations, meet the student creators and vote for your favourites.</p>
-        </div>
-        <div class="timeline-tag">Main campus</div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-date">Dec 12<span>Awards</span></div>
-        <div class="timeline-body">
-          <h3>Awards ceremony</h3>
-          <p>The closing ceremony announces Best Innovation, Best Design, Best Social Impact and the People's Choice award.</p>
-        </div>
-        <div class="timeline-tag">5:00 PM</div>
-      </div>
-    </div>
+    <div class="timeline stagger" id="scheduleTimeline"></div>
   </div>
 </section>
 
@@ -105,6 +56,51 @@
 <script>
   ExpoUI.renderNav(document.getElementById('nav'));
   ExpoUI.renderFooter(document.getElementById('footer'));
+
+  (async function loadSchedule() {
+    const container = document.getElementById('scheduleTimeline');
+    if (!container) return;
+    let schedule = [];
+    try {
+      const res = await fetch('/api/admin/settings');
+      if (res.ok) {
+        const data = await res.json();
+        schedule = (data.settings && Array.isArray(data.settings.schedule)) ? data.settings.schedule : [];
+      }
+    } catch (e) { console.error('schedule fetch failed', e); }
+    if (!schedule.length) {
+      schedule = [
+        { id:'s1', date:'2026-11-12', time:'', label:'Submissions open', note:'Students can start submitting projects.' },
+        { id:'s2', date:'2026-11-30', time:'23:59', label:'Submission deadline', note:'All project details must be submitted by 11:59 PM.' },
+        { id:'s3', date:'2026-12-01', time:'', label:'Panel review begins', note:'Faculty review period starts.' },
+        { id:'s4', date:'2026-12-05', time:'', label:'Review complete', note:'All projects reviewed.' },
+        { id:'s5', date:'2026-12-08', time:'', label:'Revision window', note:'Students address feedback.' },
+        { id:'s6', date:'2026-12-12', time:'09:00', label:'Exhibition day', note:'Doors open at 9 AM.' },
+        { id:'s7', date:'2026-12-12', time:'17:00', label:'Awards ceremony', note:'Best Innovation, Best Design, Best Social Impact, People\'s Choice.' }
+      ];
+    }
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    function fmtDate(d) {
+      if (!d) return '';
+      const parts = d.split('-');
+      if (parts.length !== 3) return d;
+      const m = months[parseInt(parts[1],10)-1] || parts[1];
+      const day = parseInt(parts[2],10);
+      return m + ' ' + day;
+    }
+    container.innerHTML = schedule.map(s => `
+      <div class="timeline-item">
+        <div class="timeline-date">${escapeHTML(fmtDate(s.date))}${s.time ? '<span>'+escapeHTML(s.time)+'</span>' : ''}</div>
+        <div class="timeline-body">
+          <h3>${escapeHTML(s.label || '')}</h3>
+          <p>${escapeHTML(s.note || '')}</p>
+        </div>
+        <div class="timeline-tag">${escapeHTML(s.time || 'Milestone')}</div>
+      </div>
+    `).join('');
+  })();
+
+  function escapeHTML(str) { return String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t])); }
 </script>
 </body>
 </html>

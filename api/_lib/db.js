@@ -45,6 +45,8 @@ function readLocalStore() {
         projects: Array.isArray(data.projects) ? data.projects : [],
         activity: Array.isArray(data.activity) ? data.activity : [],
         students: Array.isArray(data.students) ? data.students : [],
+        adminUsers: Array.isArray(data.adminUsers) ? data.adminUsers : [],
+        settings: (data.settings && typeof data.settings === 'object') ? data.settings : {},
         studentVotes: data.studentVotes && typeof data.studentVotes === 'object' ? data.studentVotes : {}
       };
       return localStoreCache;
@@ -52,7 +54,7 @@ function readLocalStore() {
   } catch (e) {
     console.error('Error reading local store:', e.message);
   }
-  localStoreCache = { projects: [], activity: [], students: [], studentVotes: {} };
+  localStoreCache = { projects: [], activity: [], students: [], adminUsers: [], settings: {}, studentVotes: {} };
   return localStoreCache;
 }
 
@@ -632,6 +634,216 @@ function getBackendInfo() {
   };
 }
 
+async function deleteStudent(studentId) {
+  if (!studentId) throw new Error('Student ID is required');
+  const list = await getStudents();
+  const idx = list.findIndex(s => s.id === studentId);
+  if (idx === -1) throw new Error('Student not found');
+  const removed = list[idx];
+  list.splice(idx, 1);
+  await saveAllStudents(list);
+  await logActivity('Student Deleted', 'Student "' + (removed.name || removed.email) + '" removed by admin');
+  return { success: true };
+}
+
+/* ==================== ADMIN USERS ==================== */
+
+async function getAdminUsers() {
+  let list = [];
+  const url = getFirebaseUrl('admin_users');
+  if (url) {
+    try {
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        const val = await res.json();
+        list = objectToArray(val);
+      }
+    } catch (e) {
+      console.warn('Firebase getAdminUsers failed, using local store:', e.message);
+    }
+  }
+  if (!list.length) {
+    const store = readLocalStore();
+    list = store.adminUsers || [];
+  }
+  if (!list.length) {
+    const user = (process.env.ADMIN_USERNAME || 'admin').trim();
+    const pass = process.env.ADMIN_PASSWORD || 'exhibition2026';
+    const salt = generateSalt();
+    const hash = hashPassword(pass, salt);
+    const seeded = { id: uid('au_'), username: user, role: 'admin', salt, hash, createdAt: Date.now(), source: 'env' };
+    list = [seeded];
+    await saveAllAdminUsers(list);
+  }
+  return list.map(({ hash, salt, ...rest }) => rest);
+}
+
+async function _loadAdminUsersRaw() {
+  const url = getFirebaseUrl('admin_users');
+  if (url) {
+    try {
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (res.ok) return objectToArray(await res.json());
+    } catch (e) {}
+  }
+  return readLocalStore().adminUsers || [];
+}
+
+async function getAdminUserRaw(username) {
+  const list = await _loadAdminUsersRaw();
+  let result = list.find(u => (u.username || '').toLowerCase() === (username || '').toLowerCase());
+  if (!result && !list.length) {
+    await getAdminUsers();
+    const list2 = await _loadAdminUsersRaw();
+    result = list2.find(u => (u.username || '').toLowerCase() === (username || '').toLowerCase());
+  }
+  return result || null;
+}
+
+async function getAdminUserByIdRaw(id) {
+  const list = await _loadAdminUsersRaw();
+  return list.find(u => u.id === id) || null;
+}
+
+async function saveAllAdminUsers(list) {
+  const store = readLocalStore();
+  store.adminUsers = list;
+  writeLocalStore(store);
+  const url = getFirebaseUrl('admin_users');
+  if (url) {
+    try {
+      await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(arrayToObject(list)) });
+    } catch (e) { console.error('Firebase saveAllAdminUsers failed:', e.message); }
+  }
+}
+
+async function createAdminUser({ username, password, role }) {
+  const clean = (username || '').trim();
+  if (!clean) throw new Error('Username is required');
+  if (!password || password.length < 6) throw new Error('Password must be at least 6 characters');
+  const existing = await getAdminUserRaw(clean);
+  if (existing) throw new Error('An admin with this username already exists');
+  const list = await _loadAdminUsersRaw();
+  const salt = generateSalt();
+  const hash = hashPassword(password, salt);
+  const user = { id: uid('au_'), username: clean, role: 'admin', salt, hash, createdAt: Date.now() };
+  list.push(user);
+  await saveAllAdminUsers(list);
+  await logActivity('Admin User Created', 'Admin user "' + clean + '" created');
+  const { hash: _, salt: __, ...safe } = user;
+  return safe;
+}
+
+async function updateAdminUser(id, patch) {
+  if (!id) throw new Error('Admin user ID is required');
+  const list = await _loadAdminUsersRaw();
+  const idx = list.findIndex(u => u.id === id);
+  if (idx === -1) throw new Error('Admin user not found');
+  if (patch.username && patch.username.trim() && patch.username.trim().toLowerCase() !== list[idx].username.toLowerCase()) {
+    const dup = list.find(u => u.id !== id && u.username.toLowerCase() === patch.username.trim().toLowerCase());
+    if (dup) throw new Error('Username already in use');
+    list[idx].username = patch.username.trim();
+  }
+  if (patch.password) {
+    if (patch.password.length < 6) throw new Error('Password must be at least 6 characters');
+    const salt = generateSalt();
+    list[idx].salt = salt;
+    list[idx].hash = hashPassword(patch.password, salt);
+  }
+  if (patch.role) list[idx].role = patch.role;
+  list[idx].updatedAt = Date.now();
+  await saveAllAdminUsers(list);
+  await logActivity('Admin User Updated', 'Admin user "' + list[idx].username + '" updated');
+  const { hash: _, salt: __, ...safe } = list[idx];
+  return safe;
+}
+
+async function deleteAdminUser(id, currentUsername) {
+  if (!id) throw new Error('Admin user ID is required');
+  const list = await _loadAdminUsersRaw();
+  const idx = list.findIndex(u => u.id === id);
+  if (idx === -1) throw new Error('Admin user not found');
+  if (list.length <= 1) throw new Error('Cannot delete the last admin user');
+  const removed = list[idx];
+  if (currentUsername && removed.username.toLowerCase() === currentUsername.toLowerCase()) {
+    throw new Error('You cannot delete your own account');
+  }
+  list.splice(idx, 1);
+  await saveAllAdminUsers(list);
+  await logActivity('Admin User Deleted', 'Admin user "' + removed.username + '" deleted');
+  return { success: true };
+}
+
+async function verifyAdminCredentials(username, password) {
+  const user = await getAdminUserRaw(username);
+  if (!user) {
+    const envUser = (process.env.ADMIN_USERNAME || 'admin').trim();
+    const envPass = process.env.ADMIN_PASSWORD || 'exhibition2026';
+    if (username.trim().toLowerCase() === envUser.toLowerCase() && password === envPass) {
+      return { username: envUser, role: 'admin', id: null };
+    }
+    return null;
+  }
+  if (!user.hash || !user.salt) return null;
+  const { verifyPassword } = require('./auth');
+  if (!verifyPassword(password, user.hash, user.salt)) return null;
+  return { username: user.username, role: user.role || 'admin', id: user.id };
+}
+
+/* ==================== SETTINGS ==================== */
+
+const DEFAULT_SCHEDULE = [
+  { id: 's1', date: '2026-11-12', time: '', label: 'Submissions open', note: 'Students can start submitting projects.' },
+  { id: 's2', date: '2026-11-30', time: '23:59', label: 'Submission deadline', note: 'Last day to submit projects.' },
+  { id: 's3', date: '2026-12-01', time: '', label: 'Panel review begins', note: 'Faculty review period starts.' },
+  { id: 's4', date: '2026-12-05', time: '', label: 'Review complete', note: 'All projects reviewed.' },
+  { id: 's5', date: '2026-12-08', time: '', label: 'Revision window', note: 'Students address feedback.' },
+  { id: 's6', date: '2026-12-12', time: '09:00', label: 'Exhibition day', note: 'Doors open to visitors.' },
+  { id: 's7', date: '2026-12-12', time: '17:00', label: 'Awards ceremony', note: 'Best Innovation, Best Design, Best Social Impact, People\'s Choice.' }
+];
+
+async function getSettings() {
+  const url = getFirebaseUrl('settings');
+  let settings = null;
+  if (url) {
+    try {
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        const val = await res.json();
+        if (val && typeof val === 'object') settings = val;
+      }
+    } catch (e) { console.warn('Firebase getSettings failed, using local store:', e.message); }
+  }
+  if (!settings) {
+    const store = readLocalStore();
+    settings = store.settings || {};
+  }
+  if (!settings.schedule || !Array.isArray(settings.schedule) || !settings.schedule.length) {
+    settings.schedule = DEFAULT_SCHEDULE.map(s => ({ ...s }));
+  }
+  if (!settings.adminConfig) settings.adminConfig = {};
+  return settings;
+}
+
+async function updateSettings(patch) {
+  const current = await getSettings();
+  const next = { ...current, ...patch };
+  if (patch.schedule) next.schedule = patch.schedule;
+  const store = readLocalStore();
+  store.settings = next;
+  writeLocalStore(store);
+  const url = getFirebaseUrl('settings');
+  if (url) {
+    try {
+      await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) });
+    } catch (e) { console.error('Firebase updateSettings failed:', e.message); }
+  }
+  await logActivity('Settings Updated', 'Exhibition settings updated');
+  return next;
+}
+
+/* ADMIN USERS + SETTINGS (placeholder marker) */
+
 module.exports = {
   CATEGORIES,
   getProjects,
@@ -656,5 +868,16 @@ module.exports = {
   getVoteCounts,
   castStudentVote,
   getStats,
-  getBackendInfo
+  getBackendInfo,
+  saveAllStudents,
+  deleteStudent,
+  getAdminUsers,
+  getAdminUserRaw,
+  getAdminUserByIdRaw,
+  createAdminUser,
+  updateAdminUser,
+  deleteAdminUser,
+  verifyAdminCredentials,
+  getSettings,
+  updateSettings
 };

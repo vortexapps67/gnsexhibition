@@ -1,6 +1,6 @@
-const { validateCredentials, signToken } = require('../_lib/auth');
+const { signToken } = require('../_lib/auth');
 const { parseJsonBody, sendJson, handleCors } = require('../_lib/helper');
-const { logActivity } = require('../_lib/db');
+const { logActivity, verifyAdminCredentials } = require('../_lib/db');
 
 module.exports = async function handler(req, res) {
   if (handleCors(req, res)) return;
@@ -17,14 +17,15 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 400, { error: 'Username and password are required.' });
     }
 
-    if (!validateCredentials(user, pass)) {
+    const admin = await verifyAdminCredentials(user, pass);
+    if (!admin) {
       return sendJson(res, 401, { error: 'Invalid admin credentials.' });
     }
 
     // Token valid for 7 days
     const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
     const token = signToken({
-      user: user.trim(),
+      user: admin.username,
       role: 'admin',
       exp: expiresAt
     });
@@ -38,7 +39,7 @@ module.exports = async function handler(req, res) {
       success: true,
       message: 'Authenticated successfully',
       token,
-      user: user.trim(),
+      user: admin.username,
       expiresAt
     }, {
       'Set-Cookie': cookie
