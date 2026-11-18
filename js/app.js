@@ -375,7 +375,7 @@
         <div class="footer-grid">
           <div>
             <div class="brand" style="margin-bottom:12px"><span class="brand-mark"><img src="school_logo.png" alt="School logo" /></span><span>Expo<span style="color:var(--accent-2)">2026</span></span></div>
-            <p style="max-width:360px;line-height:1.6">The annual school exhibition — a showcase of student innovation, creativity and engineering. Built by students, for students.</p>
+            <p style="max-width:380px;line-height:1.6">The annual school exhibition platform — our AI exhibition project created and engineered by <strong>Akshansh Sinha (8D)</strong>, <strong>Aarav Sharma (8A)</strong>, and <strong>Antram Anand (8J)</strong>.</p>
           </div>
           <div>
             <h2>Explore</h2>
@@ -404,7 +404,7 @@
         <div class="footer-wordmark" aria-hidden="true">Expo<span>2026</span></div>
         <div class="footer-bottom">
           <span>© 2026 School Exhibition. All rights reserved.</span>
-          <span>Made by students</span>
+          <span style="font-weight:600;color:var(--ink)">Made by Akshansh Sinha, Aarav Sharma and Antram Anand 8D 8A 8J</span>
         </div>
       </div>`;
   }
